@@ -67,6 +67,22 @@ class Tool:
 
         f.close()
 
+    def readDB(self, filePath):
+        # Function to read detail info inside DB file and put into a dictionary
+        # return { title : { size: <> , lang: <>, pages: <> }
+        dData = {}
+
+        try:
+            with open(filePath, 'r') as fRead:
+                for line in fRead.readlines():
+                    line = line.replace('\n','')
+                    entry = line.split(',')
+                    dData.update({entry[0] : {'lang': entry[1], 'size': entry[2], 'page': entry[3]}})
+        except FileNotFoundError:
+            raise FileNotFoundError("File %s not found" % filePath)
+
+        return dData
+
     def removeIfExist(self, filePath):
         # Function to check if a file existed, remove if Yes.
         if os._exists(filePath):
