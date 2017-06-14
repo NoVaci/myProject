@@ -1,4 +1,6 @@
 #-*- coding: utf-8 -*-
+from zipfile import BadZipFile
+
 try:
     import zipfile
     import os
@@ -7,6 +9,7 @@ try:
     import re
     import patoolib
     from pyunpack import Archive
+    import time
     from tkinter import *
 
 except ImportError:
@@ -14,7 +17,6 @@ except ImportError:
 
 class Tool:
     def __init__(self):
-        print('General Tool class')
         self.lIsCompressed     = []
         self.lReplace          = []
 
@@ -25,10 +27,34 @@ class Tool:
         self.pMoreLetter   = re.compile("[A-Z]{2,5}[0-9]+")
         self.pMatchAll     = re.compile("[A-Z0-9-._]+")
 
-    def test(self, dirPath, textWg):
-        for i in range(len(dirPath)):
-            textWg.insert(END, dirPath[i] + '\n')
-            textWg.see(END)
+        self.curZip        = 0
+        self.curDB         = 0
+
+    def getTotalFolder(self, dirPath):
+        numZip  = self.getTotalZip(dirPath)
+        numPDF  = self.getTotalPDF(dirPath)
+        numExcl = self.getExcludedFile(dirPath)
+        return len(os.listdir(dirPath)) - (numZip + numPDF + numExcl)
+
+    def getTotalZip(self, dirPath):
+        filterList = list(filter(lambda x: '.zip' in x, os.listdir(dirPath)))
+        return len(filterList)
+
+    def getTotalPDF(self, dirPath):
+        filterList = list(filter(lambda x: '.pdf' in x, os.listdir(dirPath)))
+        return len(filterList)
+
+    def getExcludedFile(self, dirPath):
+        num = 0
+        for ext in ['test', 'test.txt', 'Guro']:
+            num += 1 if os.path.exists(dirPath + ext) else 0
+        return num
+
+    def getCurrentDB(self):
+        return self.curDB
+
+    def getCurrentZip(self):
+        return self.curZip
 
     def isEnglish(self, string):
         # function to detect if a string is English or not
@@ -39,33 +65,46 @@ class Tool:
         else:
             return True
 
-    def createDatabase(self, dirPath):
+    def createDatabase(self, dirPath, dbName):
         # Fuction to store the downloaded files to a single text file for searching
-        dbName   = 'H_DB'
 
-        self.removeIfExist(dirPath + dbName + '.txt')
+        self.removeIfExist(dirPath + dbName)
 
-        f = open(dirPath + '/' + dbName + '.txt', mode='w')
+        f = open(dirPath + '/' + dbName, mode='wb')
         for file in os.listdir(dirPath):
             # file = tmpFile.decode('UTF-8')
-            if len(file.split('.')) > 1 and file.split('.')[1] in ['zip','pdf']:
+            tmpList = file.split('.')
+            iPage   = 0
+            if len(tmpList) > 1 and tmpList[len(tmpList)-1] in ['zip','pdf']:
                 sLang = 'Eng'
-                fSize = os.stat(dirPath + file).st_size
+                fStat = os.stat(dirPath + file)
+                fSize = fStat.st_size
                 fSize = round((fSize / (1024 ** 2)),2)
-                with zipfile.ZipFile(dirPath + '/' + file, 'r') as zipRead:
-                    # If not english, encode in utf-8 then write to file under binary format.
-                    # Decode before reading to get the original form.
-                    if not self.isEnglish(file[:-4]):
-                        file  = file.encode('utf-8')
-                        sLang = 'Jap'
+                # Get created time
+                cTime = time.ctime(fStat.st_ctime)
 
-                    # The database entry: <filename>,<language>,<number of pages>
-                    f.write('%s,%s,%sMB,%s\n' % (file[:-4], sLang, fSize, len(zipRead.infolist())))
+                # Encode in utf-8 then write to file under binary format.
+                # Decode before reading to get the original form.
+                if not self.isEnglish(file[:-4]):
+                    sLang = 'Jap'
+                if tmpList[len(tmpList)-1] == 'zip':
+                    try:
+                        with zipfile.ZipFile(dirPath + '/' + file, 'r') as zipRead:
+                            iPage = len(zipRead.infolist())
+                    except BadZipFile:
+                        print(file)
+                        continue
+                if type(file) != bytes:
+                    file = file.encode('utf-8')
+                # The database entry: <filename>,<language>,<number of pages>
+                # f.write('%s,%s,%sMB,%s\n' % (file[:-4], sLang, fSize, len(zipRead.infolist())))
 
-            # else:
-            #     self.createDatabase(dirPath + '/' + file)
+                tmpStr = ('#' + sLang + '#' + str(fSize) + 'MB#' + str(iPage) + '#' + cTime + '\r\n').encode('utf-8')
+                f.write(file[:-4] + tmpStr)
+                self.curDB += 1
 
         f.close()
+        print('Finished')
 
     def readDB(self, filePath):
         # Function to read detail info inside DB file and put into a dictionary
@@ -73,20 +112,41 @@ class Tool:
         dData = {}
 
         try:
-            with open(filePath, 'r') as fRead:
+            with open(filePath, 'rb') as fRead:
                 for line in fRead.readlines():
-                    line = line.replace('\n','')
-                    entry = line.split(',')
-                    dData.update({entry[0] : {'lang': entry[1], 'size': entry[2], 'page': entry[3]}})
+                    line = line.decode('utf-8')
+                    line = line.replace('\r\n','')
+                    entry = line.split('#')
+                    dData.update({entry[0] : {'lang': entry[1], 'size': entry[2], 'page': entry[3], 'ctime': entry[4]}})
         except FileNotFoundError:
             raise FileNotFoundError("File %s not found" % filePath)
 
         return dData
 
-    def removeIfExist(self, filePath):
-        # Function to check if a file existed, remove if Yes.
-        if os._exists(filePath):
-            os.remove(filePath)
+    def compressSeparateFolder(self, dirPath, textWg):
+        # Function to compress folder in a directory to separate .zip file.
+        # Except: compressed files.
+        self.listCompressed(dirPath)
+        count = 0
+        for folder in os.listdir(dirPath):
+
+            if folder[-3:] in ['zip', '.py', 'rar', 'pdf', 'txt'] or folder in ['Guro', 'test']:
+                continue
+            else:
+                if folder + '.zip' not in self.lIsCompressed:
+                    zipName = zipfile.ZipFile('{0}.zip'.format(os.path.join(dirPath, folder)), 'w',
+                                              zipfile.ZIP_DEFLATED)
+                    for root, dirs, files in os.walk(dirPath + '/' + folder):
+                        for file in files:
+                            zipName.write(os.path.abspath(os.path.join(root, file)), arcname = file)
+                    zipName.close()
+                    count += 1
+                    textWg.insert(END, folder + ' ==> Done compressed. Total: %s\n' % str(count))
+                    textWg.see(END)
+
+                    self.curZip += 1
+
+                    self.removeFolder(dirPath + '/' + folder)
 
     def listCompressed(self, dirPath):
         for folder in os.listdir(dirPath):
@@ -110,31 +170,14 @@ class Tool:
                 print('Done unRAR %s' % folder)
                 shutil.rmtree(dirPath + '/' + folder)
 
-    def compressSeparateFolder(self, dirPath, textWg):
-        # Function to compress folder in a directory to separate .zip file.
-        # Except: compressed files.
-        count = 0
-        for folder in os.listdir(dirPath):
-
-            if folder[-3:] in ['zip','.py','rar','pdf','txt']:
-                continue
-            else:
-                if folder + '.zip' not in self.lIsCompressed:
-                    zipName = zipfile.ZipFile('{0}.zip'.format(os.path.join(dirPath, folder)), 'w', zipfile.ZIP_DEFLATED)
-                    for root, dirs, files in os.walk(dirPath + '/' + folder):
-                        for file in files:
-                            zipName.write(os.path.abspath(os.path.join(root,file)), arcname=file)
-                    zipName.close()
-                    count += 1
-                    print(folder + ' ==> Done compressed. Total: %s' % str(count))
-                    textWg.insert(END, folder + ' ==> Done compressed. Total: %s\n' % str(count))
-                    textWg.see(END)
-
-                    self.removeFolder(dirPath + '/' + folder)
-
     def removeFolder(self, dirPath):
         # Function to remove already compressed folder to save space
         shutil.rmtree(dirPath, ignore_errors= True)
+
+    def removeIfExist(self, filePath):
+        # Function to check if a file existed, remove if Yes.
+        if os.path.exists(filePath):
+            os.remove(filePath)
 
     def getCommonPattern(self, dirPath):
         # Function to summarize general pattern of picture file
@@ -244,6 +287,7 @@ class Tool:
 
     def replaceFile(self, dirPath):
         # General function to make change to a file (in folder or an archive)
+        #TODO: incomplete.
         lTmp = dirPath.split('/')
         tmpFile = lTmp[len(lTmp) - 1]
 
