@@ -107,7 +107,7 @@
 # tk.Button(bop, text='Exit', command=top.destroy).pack()
 # top.mainloop()
 
-from tkinter import *
+# import tkinter as tk
 
 # class ExampleApp(tk.Tk):
 #     def __init__(self):
@@ -143,13 +143,140 @@ from tkinter import *
 #     app = ExampleApp()
 #     app.mainloop()
 
+# class SampleApp(tk.Tk):
+#     def __init__(self, *args, **kwargs):
+#         tk.Tk.__init__(self, *args, **kwargs)
+#         lb = tk.Listbox(self)
+#         lb.insert("end", "one")
+#         lb.insert("end", "two")
+#         lb.insert("end", "three")
+#         lb.bind("<Double-Button-1>", self.OnDouble)
+#         lb.pack(side="top", fill="both", expand=True)
+#
+#     def OnDouble(self, event):
+#         widget = event.widget
+#         selection=widget.curselection()
+#         value = widget.get(selection[0])
+#         print("selection:", selection, ": '%s'" % value)
+#
+# if __name__ == "__main__":
+#     app = SampleApp()
+#     app.mainloop()
+
+# from tkinter import *
+# from tkinter import messagebox
+#
+# def answer():
+#     messagebox.showerror("Answer", "Sorry, no answer available")
+#
+# def callback():
+#     if messagebox.askokcancel('Verify', 'Really quit?'):
+#         messagebox.showwarning('Yes', 'Not yet implemented')
+#     # else:
+#     #     messagebox.showinfo('No', 'Quit has been cancelled')
+#
+# Button(text='Quit', command=callback).pack(fill=X)
+# Button(text='Answer', command=answer).pack(fill=X)
+# mainloop()
+
+#========================================================================
+# Progress bar displays in different direction.
+# try:
+#   import Tkinter              # Python 2
+#   import ttk
+# except ImportError:
+#   import tkinter as Tkinter   # Python 3
+#   import tkinter.ttk as ttk
+#   import sys
+
+
+# def main():
+#
+#   root = Tkinter.Tk()
+#
+#   ft = ttk.Frame()
+#   fb = ttk.Frame()
+#
+#   ft.pack(expand=True, fill=Tkinter.BOTH, side=Tkinter.TOP)
+#   fb.pack(expand=True, fill=Tkinter.BOTH, side=Tkinter.TOP)
+#
+#   pb_hd = ttk.Progressbar(ft, orient='horizontal', mode='determinate')
+#   pb_hD = ttk.Progressbar(ft, orient='horizontal', mode='indeterminate')
+#   pb_vd = ttk.Progressbar(fb, orient='vertical', mode='determinate')
+#   pb_vD = ttk.Progressbar(fb, orient='vertical', mode='indeterminate')
+#
+#   pb_hd.pack(expand=True, fill=Tkinter.BOTH, side=Tkinter.TOP)
+#   pb_hD.pack(expand=True, fill=Tkinter.BOTH, side=Tkinter.TOP)
+#   pb_vd.pack(expand=True, fill=Tkinter.BOTH, side=Tkinter.LEFT)
+#   pb_vD.pack(expand=True, fill=Tkinter.BOTH, side=Tkinter.LEFT)
+#
+#   pb_hd.start(50)
+#   pb_hD.start(50)
+#   pb_vd.start(50)
+#   pb_vD.start(50)
+#
+#   root.mainloop()
+#
+#
+# if __name__ == '__main__':
+#   main()
+
+from tkinter import *
+# import sys
+# ABOUT_TEXT = """About
+#
+# SPIES will search your chosen directory for photographs containing
+# GPS information. SPIES will then plot the co-ordinates on Google
+# maps so you can see where each photograph was taken."""
+#
+# DISCLAIMER = """
+# Disclaimer
+#
+# Simon's Portable iPhone Exif-extraction Software (SPIES)
+# software was made by Simon. This software
+# comes with no guarantee. Use at your own risk"""
+#
+# def clickAbout():
+#     toplevel = Toplevel()
+#     label1 = Label(toplevel, text=ABOUT_TEXT, height=0, width=100)
+#     label1.pack()
+#     label2 = Label(toplevel, text=DISCLAIMER, height=0, width=100)
+#     label2.pack()
+#
+#
+# app = Tk()
+# app.title("SPIES")
+# app.geometry("500x300+200+200")
+#
+# label = Label(app, text="Please browse to the directory you wish to scan", height=0, width=100)
+# b = Button(app, text="Quit", width=20, command=app.destroy)
+# button1 = Button(app, text="About SPIES", width=20, command=clickAbout)
+# label.pack()
+# b.pack(side='bottom',padx=0,pady=0)
+# button1.pack(side='bottom',padx=5,pady=5)
+#
+# app.mainloop()
+
+from tkinter import * # Tkinter -> tkinter in Python 3
+
 root = Tk()
 
-height = 5
-width = 5
-for i in range(height): #Rows
-    for j in range(width): #Columns
-        b = Entry(root, text="")
-        b.grid(row=i, column=j)
+def hello():
+    print("hello!")
 
-mainloop()
+# create a popup menu
+menu = Menu(root, tearoff=0)
+menu.add_command(label="Undo", command=hello)
+menu.add_command(label="Redo", command=hello)
+
+# create a frame
+frame = Frame(root, width=512, height=512)
+frame.pack()
+
+def popup(event):
+    menu.post(event.x_root, event.y_root)
+
+# attach popup to frame
+frame.bind("<Button-3>", popup)
+
+root.mainloop()

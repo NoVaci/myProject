@@ -11,6 +11,7 @@ try:
     from pyunpack import Archive
     import time
     from tkinter import *
+    import sqlite3
 
 except ImportError:
     raise ImportError("Missing packages")
@@ -21,6 +22,9 @@ class Tool:
         self.lReplace          = []
 
         self.Pattern           = {}
+
+        self.mainTableName     = 'hentai'
+        self.favTableName      = 'favorite'
 
         self.pDigit        = re.compile("[0-9]+")
         self.pOneLetter    = re.compile("[A-Z]{1}[0-9]+")
@@ -65,65 +69,161 @@ class Tool:
         else:
             return True
 
-    def createDatabase(self, dirPath, dbName):
-        # Fuction to store the downloaded files to a single text file for searching
+    def createTable(self, dbPath):
+        '''
+        Create a table for storing H-title
+        :param dbPath: path of db, check before creating
+        :return: True, False
+        '''
+        if os.path.exists(dbPath):
+            return True
+        else:
+            dbConn = sqlite3.connect(dbPath)
+            dbConn.execute('''create table hentai
+                    (title text primary key     not null,
+                     language text,
+                     size     real,
+                     page     int,
+                     createtime    text,
+                     visit      int,
+                     tags       text);''')
+            dbConn.commit()
+            dbConn.close()
 
+            return True
+
+    def createFavoriteDatabase(self, dbPath):
+        '''
+        Create a view for favorite entries
+        :param dbPath: path of db, maintain separately.
+        :return:
+        '''
+        dbConn = sqlite3.connect(dbPath)
+        try:
+            dbConn.execute('select * from favorite')
+        except sqlite3.OperationalError:
+            dbConn.execute(('''create table favorite
+                                (title      text primary key     not null,
+                                 language   text,
+                                 size       real,
+                                 page       int,
+                                 createtime    text,
+                                 comment        text,
+                                 visit      int,
+                                 tags       text);'''))
+            dbConn.commit()
+            dbConn.close()
+        return True
+
+    def createMainDatabase(self, dirPath, dbName):
+        '''
+        Fuction to store the downloaded files to a db file for searching
+        :param dirPath: dir to create db
+        :param dbName: path to db file
+        :return:
+        '''
         self.removeIfExist(dirPath + dbName)
 
-        f = open(dirPath + '/' + dbName, mode='wb')
+        if self.createTable(dirPath + dbName):
+            dbConn = sqlite3.connect(dirPath + dbName)
+        else:
+            print("Something's wrong on db side. Can't create a db")
+
         for file in os.listdir(dirPath):
-            # file = tmpFile.decode('UTF-8')
-            tmpList = file.split('.')
-            iPage   = 0
-            if len(tmpList) > 1 and tmpList[len(tmpList)-1] in ['zip','pdf']:
-                sLang = 'Eng'
-                fStat = os.stat(dirPath + file)
-                fSize = fStat.st_size
-                fSize = round((fSize / (1024 ** 2)),2)
-                # Get created time
-                cTime = time.ctime(fStat.st_ctime)
+            err, tmpAttr = self.getFileAttribute(dirPath, file)
+            if err == 1:
+                continue
+            try:
+                dbConn.execute('insert into %s (title, language, size, page, createtime, visit) \
+                               values ("%s", "%s", %s, %s, "%s", %s)'
+                               % (self.mainTableName, file[:-4], tmpAttr[0], tmpAttr[1], tmpAttr[2], tmpAttr[3], tmpAttr[4]))
+            except sqlite3.IntegrityError:
+                print(file[:-4])
+                print('\n')
 
-                # Encode in utf-8 then write to file under binary format.
-                # Decode before reading to get the original form.
-                if not self.isEnglish(file[:-4]):
-                    sLang = 'Jap'
-                if tmpList[len(tmpList)-1] == 'zip':
-                    try:
-                        with zipfile.ZipFile(dirPath + '/' + file, 'r') as zipRead:
-                            iPage = len(zipRead.infolist())
-                    except BadZipFile:
-                        print(file)
-                        continue
-                if type(file) != bytes:
-                    file = file.encode('utf-8')
-                # The database entry: <filename>,<language>,<number of pages>
-                # f.write('%s,%s,%sMB,%s\n' % (file[:-4], sLang, fSize, len(zipRead.infolist())))
+            dbConn.commit()
+            self.curDB += 1
+        dbConn.close()
 
-                tmpStr = ('#' + sLang + '#' + str(fSize) + 'MB#' + str(iPage) + '#' + cTime + '\r\n').encode('utf-8')
-                f.write(file[:-4] + tmpStr)
-                self.curDB += 1
+    #TODO: not complete, implement getting attribute of the added file.
+    def updateDatabase(self, fullDBPath, *newEntry, column= None):
+        '''
+        function to update the database to avoid re-populate the whole database.
+        :param dirPath: current path
+        :param dbName: db name
+        :return: 0 if success, 1 if already exist
+        '''
+        dbConn = sqlite3.connect(fullDBPath)
+        cursor = dbConn.execute('select * from hentai where title = "%s"' % newEntry[0])
+        data = cursor.fetchall()
+        if len(data) == 0:
+            # New entry: path to dir, file name
+            err, attrList = self.getFileAttribute(newEntry[0], newEntry[1])
+            if err == 0:
+                dbConn.execute('insert into hentai (title, language, size, page, createtime, visit) \
+                                values ("%s", "%s", %s, %s, "%s", %s)' %
+                               (newEntry[1][:-4], attrList[0], attrList[1], attrList[2], attrList[3], attrList[4]))
+                dbConn.commit()
+            else:
+                dbConn.close()
+            return 0
+        else:
+            # Do update to the column specified
+            # New entry: title name, value of column
+            dbConn.execute('update hentai set %s = "%s" '
+                           'where title="%s"' % (column, newEntry[1], newEntry[0]))
+            dbConn.commit()
+            dbConn.close()
+            return 1
 
-        f.close()
-        print('Finished')
-
-    def readDB(self, filePath):
+    def readDB(self, dbPath, tbName):
         # Function to read detail info inside DB file and put into a dictionary
         # return { title : { size: <> , lang: <>, pages: <> }
         dData = {}
 
         try:
-            with open(filePath, 'rb') as fRead:
-                for line in fRead.readlines():
-                    line = line.decode('utf-8')
-                    line = line.replace('\r\n','')
-                    entry = line.split('#')
-                    if len(entry) == 5: # Normal entry without a comment.
-                        entry.append('Not Added')
-                    dData.update({entry[0] : {'lang': entry[1], 'size': entry[2], 'page': entry[3], 'ctime': entry[4], 'cmt': entry[5]}})
+            dbConn = sqlite3.connect(dbPath)
+            readAll = dbConn.execute('select * from %s' % tbName)
+            for entry in readAll:
+                if len(entry) == 5:
+                    entry.append('Not Added')
+                dData.update({entry[0] : {'lang': entry[1], 'size': entry[2], 'page': entry[3], 'ctime': entry[4], 'cmt': entry[5]}})
         except FileNotFoundError:
-            raise FileNotFoundError("File %s not found" % filePath)
+            raise FileNotFoundError("File %s not found" % dbPath)
+        except sqlite3.OperationalError:
+            self.createFavoriteDatabase(dbPath)
 
         return dData
+
+    def getFileAttribute(self, dirPath, file):
+        '''
+        Function to get a zip,pdf file attribute: size, language, no. page...
+        Attention: should only be used when initiating the database or adding anew..
+        :param filePath: file name
+        :return: list of attributes + error (0 for success, 1 for failure)
+        '''
+        iError = 0
+        tmpList = file.split('.')
+        iPage = 0
+        iVisit = 0
+        if len(tmpList) > 1 and tmpList[len(tmpList) - 1] in ['zip', 'pdf']:
+            sLang = 'Eng'
+            fStat = os.stat(dirPath + file)
+            fSize = fStat.st_size
+            fSize = round((fSize / (1024 ** 2)), 2)
+            # Get created time
+            cTime = time.ctime(fStat.st_ctime)
+
+            if not self.isEnglish(file[:-4]):
+                sLang = 'Jap'
+            if tmpList[len(tmpList) - 1] == 'zip':
+                try:
+                    with zipfile.ZipFile(dirPath + '/' + file, 'r') as zipRead:
+                        iPage = len(zipRead.infolist())
+                except BadZipFile:
+                    print(file)
+                    iError = 1
+        return iError, [sLang, fSize, iPage, cTime, iVisit]
 
     def compressSeparateFolder(self, dirPath, textWg):
         # Function to compress folder in a directory to separate .zip file.
@@ -132,7 +232,7 @@ class Tool:
         count = 0
         for folder in os.listdir(dirPath):
 
-            if folder[-3:] in ['zip', '.py', 'rar', 'pdf', 'txt'] or folder in ['Guro', 'test']:
+            if folder[-3:] in ['zip', '.py', 'rar', 'pdf', 'txt', '.db'] or folder in ['Guro', 'test']:
                 continue
             else:
                 if folder + '.zip' not in self.lIsCompressed:
@@ -238,61 +338,36 @@ class Tool:
 
         return True
 
-    def checkStringPortion(self, sOrigin, sNew):
-        """
-        Function to check how many percent new String match an origin one
-        :param sOrigin:
-        :param sNew:
-        :return: Percent in int
-        """
-        total = len(sOrigin)
-        percent = 0
-        for i in range(len(sNew)):
-            if sNew[i] == sOrigin[i]:
-                percent += 1
-        return (percent / total) * 100
-
     def checkContentofFolder(self, folder, pattern):
-        '''
-        Function to check the content of a zip archive if follow a defined pattern
-        :param folder:
-        :param pattern:
-        :return: True if match aka skip, False if not aka rename
-        '''
+        # Function to check the content of a zip archive if follow a defined pattern
+        # @param zipFolder: path to folder
+        # @param pattern: string to compare
+        # Return True if not match, need to be processed/ False
         iMisMatch = 0  # If pattern not match, count until reach a define number, here we can decide not to continue
         iMatch    = 0
-        for item in os.listdir(folder):
+        for item in folder:
             if iMisMatch > 5:
                 return False
-
-            if not re.match("[0-9]+", item[:-4]):
-                if self.checkStringPortion(pattern, item[:-4]) > 50:
-                    iMatch += 1
-                    if iMatch > 5:
-                        return True
-                else:
-                    iMisMatch += 1
+            if pattern not in item:
+                iMatch += 1
+                if iMatch > 5:
+                    return True
             else:
                 iMisMatch += 1
-        return False
 
-    def replaceFileInFolder(self, folderPath):
+        return True
+
+    def replaceFileInFolder(self, folderPath, pattern):
         # Function to replace a file in a folder
-        for folder in os.listdir(folderPath):
-            # lTemp = folderPath.split('/')
-            titleName = folder
+        lTemp   = folderPath.split('/')
+        titleName = lTemp[len(lTemp) - 1]
 
-            if titleName[:4] in ['test', 'Guro']:
-                continue
-            if not self.checkContentofFolder(folderPath + folder, titleName):
-                for item in os.listdir(folderPath + folder):
-                    numOrder = re.search("\d+", item).group()
-                    ext      = item[-4:]
-                    newName = titleName + '_' + numOrder + ext
-                    os.rename(folderPath + folder + '\\' + item, folderPath + folder + '\\' + newName)
+        if self.checkContentofFolder(folderPath, pattern):
+            for item in os.listdir(folderPath):
+                newName = titleName + '_' + item.filename
+                os.rename(item, newName)
 
     def replaceFileInZip(self, zipPath, pattern):
-        #TODO: not good enough. File name is too complicated.
         # Function to replace a file in an archive
         lTemp   = zipPath.split('/')
         zipName = lTemp[len(lTemp) - 1]
@@ -313,9 +388,12 @@ class Tool:
             print('%s not compressed yet' % zipName)
 
     def replaceFile(self, dirPath):
-        # General function to make change to a file (in folder before compressing)
+        # General function to make change to a file (in folder or an archive)
         #TODO: incomplete.
         lTmp = dirPath.split('/')
         tmpFile = lTmp[len(lTmp) - 1]
 
-        self.replaceFileInFolder(dirPath)
+        if 'zip' in tmpFile:
+            self.replaceFileInZip(dirPath, '')
+        else:
+            self.replaceFileInFolder(dirPath,'')

@@ -9,6 +9,7 @@ if __name__ == '__main__':
 
     # Compress hentai folder to zip
     dirPath = (u"H:/Doujin-Manga/test/")
+    dbName  = 'test.txt'
     # tool.listCompressed(dirPath)
     # tool.compressSeparateFolder(dirPath)
 
@@ -22,6 +23,11 @@ if __name__ == '__main__':
     # tool.getCommonPattern(dirPath)
 
     # tool.listEverything(dirPath)
-
-    tool.createDatabase(dirPath)
-
+    # tool.createDatabase(dirPath, dbName)
+    # dB = tool.readDB(dirPath + dbName)
+    # tool.removeFolder(dirPath)
+    # length = tool.getExcludedFile(dirPath)
+    # length = tool.getTotalPDF(dirPath)
+    # length = tool.getExcludedFile(dirPath)
+    # length = tool.getTotalFolder(dirPath)
+    tool.replaceFile(dirPath)

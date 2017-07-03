@@ -1,5 +1,7 @@
 from tkinter import *
-from GUI.phones  import *
+
+from Example.phones import *
+
 
 def whichSelected () :
     print("At %s of %d" % (select.curselection(), len(phonelist)))

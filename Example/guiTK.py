@@ -30,8 +30,8 @@ class GuiTK(tkinter.Tk):
         self.entry.focus_set()
         self.entry.selection_range(0, tkinter.END)
 
-        self.update()
-        self.geometry(self.geometry())
+        # self.update()
+        # self.geometry(self.geometry())
     def OnButtonClick(self):
         self.labelVariable.set(self.entryVariable.get()+" (You clicked the button)")
         self.entry.focus_set()
