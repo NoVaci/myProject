@@ -85,32 +85,31 @@ class Tool:
                      size     real,
                      page     int,
                      createtime    text,
+                     comment        text,
                      visit      int,
-                     tags       text);''')
+                     tags       text,
+                     fav    int);''')
             dbConn.commit()
             dbConn.close()
 
             return True
 
-    def createFavoriteDatabase(self, dbPath):
+    def createFavoriteView(self, dbPath, bDrop = False):
         '''
         Create a view for favorite entries
-        :param dbPath: path of db, maintain separately.
+        :param dbPath: path of db, same path as main db.
+        :param bDrop: flag to signal drop the current view and create anew
         :return:
         '''
         dbConn = sqlite3.connect(dbPath)
+        if bDrop:
+            dbConn.execute('drop view if exists favorite')
         try:
             dbConn.execute('select * from favorite')
         except sqlite3.OperationalError:
-            dbConn.execute(('''create table favorite
-                                (title      text primary key     not null,
-                                 language   text,
-                                 size       real,
-                                 page       int,
-                                 createtime    text,
-                                 comment        text,
-                                 visit      int,
-                                 tags       text);'''))
+            dbConn.execute('create view favorite as \
+                            select title            \
+                            from hentai where fav=1 ')
             dbConn.commit()
             dbConn.close()
         return True
@@ -129,20 +128,25 @@ class Tool:
         else:
             print("Something's wrong on db side. Can't create a db")
 
+        tmpCmt = 'Not Added'
+        tmpTag = 'Not Added'
+        initFav = 0
         for file in os.listdir(dirPath):
-            err, tmpAttr = self.getFileAttribute(dirPath, file)
-            if err == 1:
-                continue
-            try:
-                dbConn.execute('insert into %s (title, language, size, page, createtime, visit) \
-                               values ("%s", "%s", %s, %s, "%s", %s)'
-                               % (self.mainTableName, file[:-4], tmpAttr[0], tmpAttr[1], tmpAttr[2], tmpAttr[3], tmpAttr[4]))
-            except sqlite3.IntegrityError:
-                print(file[:-4])
-                print('\n')
+            if 'test' not in file or 'fav' not in file:
+                err, tmpAttr = self.getFileAttribute(dirPath, file)
+                if err == 1 or err == -1:
+                    continue
+                try:
+                    dbConn.execute('insert into %s (title, language, size, page, createtime, comment, visit, tags, fav) \
+                                   values ("%s", "%s", %s, %s, "%s", "%s", %s, "%s", %s)'
+                                   % (self.mainTableName, file[:-4], tmpAttr[0], tmpAttr[1], tmpAttr[2], tmpAttr[3],
+                                      tmpCmt, tmpAttr[4], tmpTag, initFav))
+                except sqlite3.IntegrityError:
+                    print(file[:-4])
+                    print('\n')
 
-            dbConn.commit()
-            self.curDB += 1
+                dbConn.commit()
+                self.curDB += 1
         dbConn.close()
 
     #TODO: not complete, implement getting attribute of the added file.
@@ -156,13 +160,18 @@ class Tool:
         dbConn = sqlite3.connect(fullDBPath)
         cursor = dbConn.execute('select * from hentai where title = "%s"' % newEntry[0])
         data = cursor.fetchall()
+
+        tmpCmt  = 'Not Added'
+        tmpTag  = 'Not Added'
+        initFav = 0
         if len(data) == 0:
             # New entry: path to dir, file name
             err, attrList = self.getFileAttribute(newEntry[0], newEntry[1])
             if err == 0:
-                dbConn.execute('insert into hentai (title, language, size, page, createtime, visit) \
-                                values ("%s", "%s", %s, %s, "%s", %s)' %
-                               (newEntry[1][:-4], attrList[0], attrList[1], attrList[2], attrList[3], attrList[4]))
+                dbConn.execute('insert into hentai (title, language, size, page, createtime, comment, visit, tags, fav) \
+                                values ("%s", "%s", %s, %s, "%s", "%s", %s, "%s", %s)' %
+                               (newEntry[1][:-4], attrList[0], attrList[1], attrList[2], attrList[3],
+                                tmpCmt, attrList[4], tmpTag, initFav))
                 dbConn.commit()
             else:
                 dbConn.close()
@@ -185,13 +194,12 @@ class Tool:
             dbConn = sqlite3.connect(dbPath)
             readAll = dbConn.execute('select * from %s' % tbName)
             for entry in readAll:
-                if len(entry) == 5:
-                    entry.append('Not Added')
-                dData.update({entry[0] : {'lang': entry[1], 'size': entry[2], 'page': entry[3], 'ctime': entry[4], 'cmt': entry[5]}})
+                dData.update({entry[0] : {'lang': entry[1], 'size': entry[2], 'page': entry[3], 'ctime': entry[4],
+                                          'cmt': entry[5], 'visit': entry[6], 'tags': entry[7], 'fav': entry[8]}})
         except FileNotFoundError:
             raise FileNotFoundError("File %s not found" % dbPath)
         except sqlite3.OperationalError:
-            self.createFavoriteDatabase(dbPath)
+            self.createFavoriteView(dbPath)
 
         return dData
 
@@ -200,14 +208,17 @@ class Tool:
         Function to get a zip,pdf file attribute: size, language, no. page...
         Attention: should only be used when initiating the database or adding anew..
         :param filePath: file name
-        :return: list of attributes + error (0 for success, 1 for failure)
+        :return: list of attributes + error (0 for success, 1 for failure, -1 for not supported file)
         '''
         iError = 0
         tmpList = file.split('.')
+        sLang = 'Eng'
+        fSize = 0
         iPage = 0
+        cTime = ''
         iVisit = 0
+
         if len(tmpList) > 1 and tmpList[len(tmpList) - 1] in ['zip', 'pdf']:
-            sLang = 'Eng'
             fStat = os.stat(dirPath + file)
             fSize = fStat.st_size
             fSize = round((fSize / (1024 ** 2)), 2)
@@ -223,7 +234,10 @@ class Tool:
                 except BadZipFile:
                     print(file)
                     iError = 1
-        return iError, [sLang, fSize, iPage, cTime, iVisit]
+            return iError, [sLang, fSize, iPage, cTime, iVisit]
+        else:
+            iError = -1
+            return iError, []
 
     def compressSeparateFolder(self, dirPath, textWg):
         # Function to compress folder in a directory to separate .zip file.

@@ -1,6 +1,8 @@
 #-*- coding: utf-8 -*-
 from zipfile import BadZipFile
 
+import sqlite3
+
 try:
     import zipfile
     import os
@@ -14,13 +16,15 @@ try:
 
 except ImportError:
     raise ImportError("Missing packages")
-
+#TODO: read from db.
 class Tool:
     def __init__(self):
         self.lIsCompressed     = []
         self.lReplace          = []
 
         self.Pattern           = {}
+
+        self.tableName         = 'hentai'
 
         self.pDigit        = re.compile("[0-9]+")
         self.pOneLetter    = re.compile("[A-Z]{1}[0-9]+")
@@ -65,14 +69,44 @@ class Tool:
         else:
             return True
 
-    def createDatabase(self, dirPath, dbName):
-        # Fuction to store the downloaded files to a single text file for searching
+    def createTable(self, dbPath):
+        '''
+        Create a table for storing H-title
+        :param dbPath: path of db, check before creating
+        :return: True, False
+        '''
+        if os.path.exists(dbPath):
+            return True
+        else:
+            dbConn = sqlite3.connect(dbPath)
 
-        self.removeIfExist(dirPath + dbName)
+            dbConn.execute('''create table hentai
+                    (title text primary key     not null,
+                     language text,
+                     size     real,
+                     page     int,
+                     createtime    text,
+                     comment        text);''')
+            dbConn.commit()
+            dbConn.close()
 
-        f = open(dirPath + '/' + dbName, mode='wb')
+            return True
+
+    def createDatabase(self, dirPath, dbPath):
+        '''
+        Fuction to store the downloaded files to a single text file for searching
+        :param dirPath: dir to create db
+        :param dbPath: path to db file
+        :return:
+        '''
+        self.removeIfExist(dbPath)
+
+        if self.createTable(dbPath):
+            dbConn = sqlite3.connect(dbPath)
+        else:
+            print("Something's wrong on db side. Can't create a db")
+
         for file in os.listdir(dirPath):
-            # file = tmpFile.decode('UTF-8')
             tmpList = file.split('.')
             iPage   = 0
             if len(tmpList) > 1 and tmpList[len(tmpList)-1] in ['zip','pdf']:
@@ -83,8 +117,6 @@ class Tool:
                 # Get created time
                 cTime = time.ctime(fStat.st_ctime)
 
-                # Encode in utf-8 then write to file under binary format.
-                # Decode before reading to get the original form.
                 if not self.isEnglish(file[:-4]):
                     sLang = 'Jap'
                 if tmpList[len(tmpList)-1] == 'zip':
@@ -94,34 +126,38 @@ class Tool:
                     except BadZipFile:
                         print(file)
                         continue
-                if type(file) != bytes:
-                    file = file.encode('utf-8')
-                # The database entry: <filename>,<language>,<number of pages>
-                # f.write('%s,%s,%sMB,%s\n' % (file[:-4], sLang, fSize, len(zipRead.infolist())))
-
-                tmpStr = ('#' + sLang + '#' + str(fSize) + 'MB#' + str(iPage) + '#' + cTime + '\r\n').encode('utf-8')
-                f.write(file[:-4] + tmpStr)
+                cmd = "insert into %s (title, language, size, page, createtime) \
+                               values (%s, %s, %s, %s, %s)" % (self.tableName, file[:-4], sLang, fSize, iPage, cTime)
+                dbConn.execute("insert into %s (title, language, size, page, createtime) \
+                               values ('%s', '%s', %s, %s, '%s')" % (self.tableName, file[:-4], sLang, fSize, iPage, cTime))
+                dbConn.commit()
                 self.curDB += 1
-
-        f.close()
+        # print('Check content')
+        # cursor = dbConn.execute('select * from %s' % self.tableName)
+        # for entry in cursor:
+        #     print("name = ", entry[0])
+        #     print("lang = ", entry[1])
+        #     print("size = ", entry[2])
+        #     print("page = ", entry[3])
+        #     print("time = ", entry[4])
+        dbConn.close()
         print('Finished')
 
-    def readDB(self, filePath):
+
+    def readDB(self, dbPath):
         # Function to read detail info inside DB file and put into a dictionary
         # return { title : { size: <> , lang: <>, pages: <> }
         dData = {}
 
         try:
-            with open(filePath, 'rb') as fRead:
-                for line in fRead.readlines():
-                    line = line.decode('utf-8')
-                    line = line.replace('\r\n','')
-                    entry = line.split('#')
-                    if len(entry) == 5: # Normal entry without a comment.
-                        entry.append('Not Added')
-                    dData.update({entry[0] : {'lang': entry[1], 'size': entry[2], 'page': entry[3], 'ctime': entry[4], 'cmt': entry[5]}})
+            dbConn = sqlite3.connect(dbPath)
+            readAll = dbConn.execute('select * from ', self.tableName)
+            for entry in readAll:
+                if len(entry) == 5:
+                    entry.append('Not Added')
+                dData.update({entry[0] : {'lang': entry[1], 'size': entry[2], 'page': entry[3], 'ctime': entry[4], 'cmt': entry[5]}})
         except FileNotFoundError:
-            raise FileNotFoundError("File %s not found" % filePath)
+            raise FileNotFoundError("File %s not found" % dbPath)
 
         return dData
 

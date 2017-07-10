@@ -221,62 +221,104 @@
 # if __name__ == '__main__':
 #   main()
 
-from tkinter import *
-# import sys
-# ABOUT_TEXT = """About
+# from tkinter import *
+# # import sys
+# # ABOUT_TEXT = """About
+# #
+# # SPIES will search your chosen directory for photographs containing
+# # GPS information. SPIES will then plot the co-ordinates on Google
+# # maps so you can see where each photograph was taken."""
+# #
+# # DISCLAIMER = """
+# # Disclaimer
+# #
+# # Simon's Portable iPhone Exif-extraction Software (SPIES)
+# # software was made by Simon. This software
+# # comes with no guarantee. Use at your own risk"""
+# #
+# # def clickAbout():
+# #     toplevel = Toplevel()
+# #     label1 = Label(toplevel, text=ABOUT_TEXT, height=0, width=100)
+# #     label1.pack()
+# #     label2 = Label(toplevel, text=DISCLAIMER, height=0, width=100)
+# #     label2.pack()
+# #
+# #
+# # app = Tk()
+# # app.title("SPIES")
+# # app.geometry("500x300+200+200")
+# #
+# # label = Label(app, text="Please browse to the directory you wish to scan", height=0, width=100)
+# # b = Button(app, text="Quit", width=20, command=app.destroy)
+# # button1 = Button(app, text="About SPIES", width=20, command=clickAbout)
+# # label.pack()
+# # b.pack(side='bottom',padx=0,pady=0)
+# # button1.pack(side='bottom',padx=5,pady=5)
+# #
+# # app.mainloop()
 #
-# SPIES will search your chosen directory for photographs containing
-# GPS information. SPIES will then plot the co-ordinates on Google
-# maps so you can see where each photograph was taken."""
+# from tkinter import * # Tkinter -> tkinter in Python 3
 #
-# DISCLAIMER = """
-# Disclaimer
+# root = Tk()
 #
-# Simon's Portable iPhone Exif-extraction Software (SPIES)
-# software was made by Simon. This software
-# comes with no guarantee. Use at your own risk"""
+# def hello():
+#     print("hello!")
 #
-# def clickAbout():
-#     toplevel = Toplevel()
-#     label1 = Label(toplevel, text=ABOUT_TEXT, height=0, width=100)
-#     label1.pack()
-#     label2 = Label(toplevel, text=DISCLAIMER, height=0, width=100)
-#     label2.pack()
+# # create a popup menu
+# menu = Menu(root, tearoff=0)
+# menu.add_command(label="Undo", command=hello)
+# menu.add_command(label="Redo", command=hello)
 #
+# # create a frame
+# frame = Frame(root, width=512, height=512)
+# frame.pack()
 #
-# app = Tk()
-# app.title("SPIES")
-# app.geometry("500x300+200+200")
+# def popup(event):
+#     menu.post(event.x_root, event.y_root)
 #
-# label = Label(app, text="Please browse to the directory you wish to scan", height=0, width=100)
-# b = Button(app, text="Quit", width=20, command=app.destroy)
-# button1 = Button(app, text="About SPIES", width=20, command=clickAbout)
-# label.pack()
-# b.pack(side='bottom',padx=0,pady=0)
-# button1.pack(side='bottom',padx=5,pady=5)
+# # attach popup to frame
+# frame.bind("<Button-3>", popup)
 #
-# app.mainloop()
+# root.mainloop()
+# CREATE VIEW COMPANY_VIEW AS
+# SELECT ID, NAME, AGE
+# FROM  COMPANY;
+import sqlite3
 
-from tkinter import * # Tkinter -> tkinter in Python 3
+conn = sqlite3.connect('test.db')
+# conn.execute('''CREATE TABLE COMPANY
+#          (ID       INT PRIMARY KEY        NOT NULL,
+#          NAME      TEXT                   NOT NULL,
+#          AGE       INT                    NOT NULL,
+#          ADDRESS   CHAR(50),
+#          SALARY    REAL);''')
+# conn.execute("INSERT INTO COMPANY (ID, NAME, AGE,ADDRESS,SALARY) \
+#       VALUES (1, 'Paul', 32, 'California', 20000.00 )")
+# conn.execute('INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY) \ '
+#              'VALUES (4, "PAllen", 25, "Texas", 15000.00 )')
+# conn.commit()
+# conn.execute("UPDATE COMPANY set SALARY = %s where ID = 1" % 3000)
+# name = "i've done it"       # \\'ve
+# # name = name.replace('\'', '\\\'')
+# conn.execute('UPDATE COMPANY set NAME = "%s" where ID = 1' % name)
+# conn.execute('create view paul as \
+#               select id, name, age \
+#               from company')
 
-root = Tk()
+# cursor = conn.execute('select name from sqlite_master where type="table" and name = "company"')
+# data = cursor.fetchall()
 
-def hello():
-    print("hello!")
+# conn.commit()
+cursor = conn.execute('select * from company')
+data = cursor.fetchall()
+print(type(data))
+print(data)
+for row in cursor:
+   print("title = ", row[0])
+   print("lang = ", row[1])
+   print('size = ', row[2])
+   print('page = ', row[3])
+   print('time = ', row[4])
+   print('cmt = ', row[5])
 
-# create a popup menu
-menu = Menu(root, tearoff=0)
-menu.add_command(label="Undo", command=hello)
-menu.add_command(label="Redo", command=hello)
-
-# create a frame
-frame = Frame(root, width=512, height=512)
-frame.pack()
-
-def popup(event):
-    menu.post(event.x_root, event.y_root)
-
-# attach popup to frame
-frame.bind("<Button-3>", popup)
-
-root.mainloop()
+conn.close()

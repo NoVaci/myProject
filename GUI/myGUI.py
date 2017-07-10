@@ -21,11 +21,11 @@ class myGUI():
 
         self.tool = Tool()
         self.dirPath = (u"I:\H-Colle\\")
-        self.PATHLIST = (
+        self.PATHLIST = [
             u"I:\H-Colle\\",
             u"H:\Doujin-Manga\\",
             u"H:\Doujin-Manga\\test\\"
-        )
+        ]
 
         self.pathVar = StringVar()
         self.nameVar = StringVar()
@@ -34,10 +34,11 @@ class myGUI():
         self.curPath = ''
 
         self.mainDB  = 'test.db'
-        self.favDB = 'fav.db'
 
-        self.db      = self.tool.readDB(self.dirPath + self.mainDB, self.tool.mainTableName)
-        self.fav     = self.tool.readDB(self.dirPath + self.favDB, self.tool.favTableName)
+        self.debug = True
+
+        if not self.debug:
+            self.db      = self.tool.readDB(self.dirPath + self.mainDB, self.tool.mainTableName)
 
         # Store searched list
         self.searchedList = []
@@ -51,6 +52,7 @@ class myGUI():
         self.visit   = StringVar()
         self.tags    = StringVar()
         self.cmt     = StringVar()
+        self.fav   = StringVar()
         self.cutTitle= StringVar()
 
         self.barVar  = StringVar()
@@ -114,6 +116,9 @@ class myGUI():
         Label(frameInput, text = 'Tags:').grid(column = 0, row = 11, sticky = W)
         Label(frameInput, textvariable = self.tags).grid(column = 1, row = 11, sticky = W)
 
+        Label(frameInput, text = 'Favorite?:').grid(column = 0, row = 12, sticky = W)
+        Label(frameInput, textvariable = self.fav).grid(column = 1, row = 12, sticky = W)
+
         # ----------------------------------------------------
         # Right: output screen
         # Consist of
@@ -135,7 +140,7 @@ class myGUI():
 
         # Section for pop up menu
         self.popMenu = Menu(parent, tearoff = 0)
-        self.popMenu.add_command(label = 'Add Fav', command = self.popupAddComment)
+        self.popMenu.add_command(label = 'Add Fav', command = self.saveToFavourite)
         self.popMenu.add_command(label = 'Remove Fav', command = self.popupWarning)
         self.popMenu.add_command(label = 'Open Location', command = self.popupWarning)
 
@@ -156,20 +161,24 @@ class myGUI():
         btnDownload = Button(frameBtn, text = 'Download',
                              command = self.popupDownload)
 
+        btnTransfer = Button(frameBtn, text = 'Transfer',
+                             command = self.popupDownload)
+
         btnCreateDB = Button(frameBtn, text = 'Create DB',
                              command = lambda: self.__threadCall(self.createDB))
 
         btnLoadDB   = Button(frameBtn, text = 'Load DB',
                              command = self.__loadDB)
 
-        btnLoadFav = Button(frameBtn, text = 'Load Fav',
+        btnLoadFav  = Button(frameBtn, text = 'Load Fav',
                            command = lambda : self.loadFavorite(self.selection))
 
         btnDelete   = Button(frameBtn, text = 'Remove',
                              command = self._delSelected)
-        btnTest     = Button(frameBtn, text = 'Test',
-                             command = lambda : self.__threadCall(self.popupPB, self.tool.getTotalFolder(self.pathVar.get())))
-
+        if self.debug:
+            btnDebug    = Button(frameBtn, text = 'Create Fav',
+                                 command = lambda : self.__threadCall(self.tool.createFavoriteView, self.pathVar.get() + self.mainDB, self.debug))
+            btnDebug.grid(column = 0, row = 3, sticky = 'nsew')
         # btnCompZip.pack(side = TOP, padx = 10)
         btnCompZip.grid(column = 0, row = 0, sticky = 'nsew')
         btnDownload.grid(column = 1, row = 0, sticky = 'nsew')
@@ -197,6 +206,9 @@ class myGUI():
         value  = self.loadSelected(self.searchedList, widget)
         self.loadEntry(value)
 
+        if self.debug:
+            print(value)
+
     def removeDuplicate(self, lTarget):
         '''
         Remove duplicate search result.
@@ -212,6 +224,27 @@ class myGUI():
     def __loadDB(self):
         # function to load DB to self.db
         self.db = self.tool.readDB(self.pathVar.get() + self.mainDB, self.tool.mainTableName)
+
+    def _callBack(self, *args):
+        '''
+        Function to invoke warning pop up from event
+        :param args:
+        :return:
+        '''
+        print('Start Call Back on Funcion - popupWarning')
+        return lambda : self.popupWarning(title = args[0], text = args[1], bDestroy = args[2])
+
+    def _convertTupToList(self, list):
+        '''
+        Function to convert tuple element of a list to a simple list
+        :param list: list contains tuple with len of 1. [(,),(,)]
+        :return: list
+        '''
+        resList = []
+        for i in range(len(list)):
+            if type(list[i]) == tuple:
+                resList.append(list[i][0])
+        return resList
 
     def detectPathChange(self):
         # Function to load DB when detecting a change in path folder
@@ -269,6 +302,7 @@ class myGUI():
             self.visit.set('')
             self.tags.set('')
             self.cmt.set('')
+            self.fav.set('')
         else:
             self.lang.set(self.db[input]['lang'])
             self.size.set(self.db[input]['size'])
@@ -276,10 +310,15 @@ class myGUI():
             self.ctime.set(self.db[input]['ctime'])
             self.visit.set(self.db[input]['visit'])
             self.tags.set(self.db[input]['tags'])
-            try:
-                self.cmt.set(self.fav[input]['cmt'])
-            except KeyError:
-                self.cmt.set('Not Added')
+            self.cmt.set(self.db[input]['cmt'])
+
+            if self.debug:
+                print("\nFav value: %s - type: %s" % (self.db[input]['fav'], type(self.db[input]['fav'])))
+
+            if self.db[input]['fav'] == 1:
+                self.fav.set('Epic')
+            else:
+                self.fav.set('Normal')
 
     def loadAll(self, lboxWg):
         # Function to load all title and show in listbox
@@ -315,38 +354,36 @@ class myGUI():
         self.tool.updateDatabase(self.pathVar.get() + self.mainDB, self.title.get(), visitCount, column = 'visit')
 
     def loadFavorite(self, lboxWg):
-        self.fav = self.tool.readDB(self.pathVar.get() + self.favDB, self.tool.favTableName)
-        self.searchedList = list(self.fav.keys())
+        viewFav   = sqlite3.connect(self.pathVar.get() + self.mainDB)
+        favList = viewFav.execute('select * from favorite').fetchall()
+        if len(favList) != 0:
+            self.searchedList = self._convertTupToList(favList)
         self.loadResult(self.searchedList, lboxWg)
 
-    def saveToFavourite(self, lboxWg):
+    def saveToFavourite(self):
         '''
         Function to save current selected entry to favourite list.
         :param lboxWg: list where result is shown.
         :return: None
         '''
-        dbFav = sqlite3.connect(self.pathVar.get() + self.favDB)
+        dbFav = sqlite3.connect(self.pathVar.get() + self.mainDB)
 
-        selectFile = self.loadSelected(self.searchedList, lboxWg)
-        tmpLang = self.db[selectFile]['lang']
-        tmpSize = self.db[selectFile]['size']
-        tmpPage = self.db[selectFile]['page']
-        tmpCTime = self.db[selectFile]['ctime']
-        tmpCmt = self.cmtVar.get()
+        selectFile = self.loadSelected(self.searchedList, self.selection)
         dbCursor = dbFav.execute('select * from favorite where title="%s"' % selectFile)
         checkData = dbCursor.fetchall()
-        if len(checkData) != 0:
-            dbFav.execute('update favorite \
-                           set comment = "%s" \
-                           where title = "%s"' % (self.cmtVar.get(), selectFile))
-        else:
-            dbFav.execute('insert into favorite (title, language, size, page, createtime, comment) \
-                          values ("%s", "%s", %s, %s, "%s", "%s")' % (selectFile, tmpLang, tmpSize, tmpPage, tmpCTime, tmpCmt))
-        dbFav.commit()
-        dbFav.close()
+        if len(checkData) == 0:
+            dbFav.execute('update hentai \
+                           set fav = 1 where title = "%s"' % selectFile)
+            dbFav.commit()
 
-        # Should I add reload fav db?
-        self.fav = self.tool.readDB(self.pathVar.get() + self.favDB, self.tool.favTableName)
+            # Update to current loaded db
+            self.db[selectFile]['fav'] = 1
+        else:
+            # Popup warning
+            self._callBack('Errrror!','Already added', True)
+            print('Added - %s' %selectFile)
+
+        dbFav.close()
 
     def removeFromFavorite(self):
         '''
@@ -354,7 +391,7 @@ class myGUI():
         Should remove from the stored file as well.
         :return:
         '''
-        dbFav = sqlite3.connect(self.pathVar.get() + self.favDB)
+        dbFav = sqlite3.connect(self.pathVar.get() + self.mainDB)
 
         selectFile = self.loadSelected(self.searchedList, self.selection)
         dbCursor = dbFav.execute('select * from favorite where title="%s"' % selectFile)
@@ -387,7 +424,35 @@ class myGUI():
         except:
             print("Something's wrong with cmd call")
 
-    def popupWarning(self, title = None, text = None):
+    def transferDB(self):
+        '''
+        Function to transfer data from one db to another
+        :return:
+        '''
+        self.transWin = Toplevel()
+        self.transWin.title = 'Transfer data'
+        pathA = StringVar()
+        pathB = StringVar()
+        pathAList = [u"H:\Doujin-Manga\\",
+                     u"H:\Doujin-Manga\\test\\"]
+        pathBList = [u"I:\H-Colle\\",
+                      u"H:\Doujin-Manga\\",]
+        pathA.set(pathAList[0])
+        pathB.set(pathBList[0])
+
+        dbA = OptionMenu(self.transWin, pathA, *pathAList)
+        tmpList = pathBList
+        try:
+            del tmpList[tmpList.index(pathA.get())]
+        except ValueError:
+            pass
+        dbB = OptionMenu(self.transWin, pathB, *tmpList)
+
+        dbA.pack(padx = 10, pady = 5)
+        dbB.pack(padx = 10, pady = 5)
+
+
+    def popupWarning(self, title = None, text = None, bDestroy = False):
         title = 'Sorry !' if title is None else title
         text  = 'Not implemented yet. Contact NoVaci ASAP!!' if text is None else text
 
@@ -395,6 +460,10 @@ class myGUI():
         self.win.title(title)
         sorLabel = Label(self.win, text = text, height = 5, width = 50)
         sorLabel.pack()
+
+        if bDestroy:
+            sleep(5)
+            self.win.destroy()
 
     def popupPB(self, *args):
         # Fucntion to open a popup when a task is running, progress bar is included
@@ -460,7 +529,7 @@ class myGUI():
         A combine function to save to fav db then close the window
         :return: 0 for success, 1 for failure
         '''
-        self.saveToFavourite(self.selection)
+
         self.noteWin.destroy()
 
     def _delSelected(self):
