@@ -424,9 +424,34 @@ class myGUI():
         except:
             print("Something's wrong with cmd call")
 
-    def transferDB(self):
+    def transferDB(self, dbPathA, dbPathB):
         '''
         Function to transfer data from one db to another
+        :param dbPathA: path to original db is located
+        :param dbPathB: path to target db
+        :return:
+        '''
+        dbA = sqlite3.connect(dbPathA)
+        dbB = sqlite3.connect(dbPathB)
+
+        cursor = dbA.execute('select * from hentai')
+        dbAEntries = cursor.fetchall()
+        for i in range(len(dbAEntries)):
+            checkExist = dbB.execute('select title from hentai where title = "%s"' % dbAEntries[i][0]).fetchall()
+            if len(checkExist) == 0:
+                dbB.execute('insert or ignore into hentai(title, language, size, page, createtime, comment, visit, tags, fav) '
+                            'values ({0},{1},{2},{3},{4},{5},{6},{7},{8}'.format(*dbAEntries[i]))
+
+            else:
+                print(dbAEntries[i][0] + '\n')  # Flush to a list so we can manually decide what to do next?
+
+        dbB.commit()
+        dbA.close()
+        dbB.close()
+
+    def popupTransfer(self):
+        '''
+        Create a window for choosing which db path to be used
         :return:
         '''
         self.transWin = Toplevel()
@@ -442,7 +467,7 @@ class myGUI():
 
         dbA = OptionMenu(self.transWin, pathA, *pathAList)
         tmpList = pathBList
-        try:
+        try:    # Remove selected value (in A) from list B -> can' transfer to self.
             del tmpList[tmpList.index(pathA.get())]
         except ValueError:
             pass
@@ -451,6 +476,8 @@ class myGUI():
         dbA.pack(padx = 10, pady = 5)
         dbB.pack(padx = 10, pady = 5)
 
+        btnStart = Button(self.transWin, text = 'Start', command = self.transferDB(pathA.get() + self.mainDB, pathB.get() + self.mainDB))
+        btnStart.pack(SIDE = BOTTOM, pady = 3)
 
     def popupWarning(self, title = None, text = None, bDestroy = False):
         title = 'Sorry !' if title is None else title
