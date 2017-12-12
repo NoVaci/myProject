@@ -1,6 +1,6 @@
 from tkinter import *
 from tkinter import messagebox
-
+import os
 try:
     from Tools.Tool import Tool
     from Tools.ProgressBar import ProgressBar
@@ -10,6 +10,7 @@ except ImportError:
 import threading
 import subprocess
 from time import sleep
+import time
 import sqlite3
 
 #TODO: 6/14/2017: add remove fav entry.
@@ -35,7 +36,7 @@ class myGUI():
 
         self.mainDB  = 'test.db'
 
-        self.debug = True
+        self.debug = False
 
         if not self.debug:
             self.db      = self.tool.readDB(self.dirPath + self.mainDB, self.tool.mainTableName)
@@ -57,6 +58,8 @@ class myGUI():
 
         self.barVar  = StringVar()
         self.cmtVar  = StringVar()
+        self.tagVar  = StringVar()
+        self.titleVar = StringVar()
 
     def initializeGUI(self, parent):
         frameInput = Frame(parent)  # Test: input + button in 1 frame
@@ -119,30 +122,43 @@ class myGUI():
         Label(frameInput, text = 'Favorite?:').grid(column = 0, row = 12, sticky = W)
         Label(frameInput, textvariable = self.fav).grid(column = 1, row = 12, sticky = W)
 
+        btnLatest = Button(text = 'Latest Entries', command = lambda : self.__threadCall(self.loadLatest))
+        btnLatest.grid(column = 0, row = 13, sticky = W)
         # ----------------------------------------------------
         # Right: output screen
         # Consist of
         # ----------------------------------------------------
 
         frameOutput = Frame(parent)
-        frameOutput.grid(column = 1, row = 0, rowspan = 2, sticky = W)
+        frameOutput.grid(column = 1, row = 0, rowspan = 2, sticky = E)
 
-        Label(frameOutput, text = 'Output').grid(column = 0, row = 2, sticky = W)
-        # this will receive the output from console
-        textField = Text(frameOutput)
-        textField.grid(column = 0, row = 3, sticky = N+S+E+W)
-        textField.grid_columnconfigure(0, weight = 1)
+        # Label(frameOutput, text = 'Output').grid(column = 0, row = 2, sticky = W)
+        # # this will receive the output from console
+        # textField = Text(frameOutput)
+        # textField.grid(column = 0, row = 3, sticky = N+S+E+W)
+        # textField.grid_columnconfigure(0, weight = 1)
 
-        Label(frameOutput, text = 'Result').grid(column = 0, row = 0, sticky = W)
-        self.selection = Listbox(frameOutput, height = 15, width = 160, exportselection = 0)
+        # Label(frameOutput, text = 'Result').grid(column = 0, row = 0, sticky = W)
+        scroll = Scrollbar(frameOutput, orient = VERTICAL)
+        # canvasContainer.configure(yscrollcommand = scroll.set)
+        # canvasContainer.create_window((40,160), window = frameOutput, anchor = NW)
+        # frameOutput.bind("<Configure>", self.onFrameConfigure)
+
+        # Placement
+        # canvasContainer.grid(column = 1, row = 0, rowspan = 2)
+        # scroll.pack(side = RIGHT, fill = Y)
+        scroll.grid(column = 1, row = 0, rowspan = 2, sticky = N+S)
+        self.selection = Listbox(frameOutput, height = 40, width = 160, exportselection = 0, yscrollcommand = scroll.set)
         self.selection.bind("<Double-Button-1>", self.__onDoubleClick)
-        self.selection.grid(column = 0, row = 1, sticky = W)
+        self.selection.grid(column = 0, row = 0, sticky = W)
+        # self.selection.pack(side = LEFT, fill = Y)
+        scroll.config(command = self.selection.yview, orient = VERTICAL)
 
         # Section for pop up menu
         self.popMenu = Menu(parent, tearoff = 0)
         self.popMenu.add_command(label = 'Add Fav', command = self.saveToFavourite)
-        self.popMenu.add_command(label = 'Remove Fav', command = self.popupWarning)
-        self.popMenu.add_command(label = 'Open Location', command = self.popupWarning)
+        self.popMenu.add_command(label = 'Remove Fav', command = self.removeFromFavorite)
+        self.popMenu.add_command(label = 'Add info', command = self.popupAddInfo)
 
         self.selection.bind("<Button-3>", self.popupMenu)
         # # Try to do resize. Wrong -> Hanging
@@ -162,7 +178,7 @@ class myGUI():
                              command = self.popupDownload)
 
         btnTransfer = Button(frameBtn, text = 'Transfer',
-                             command = self.popupDownload)
+                             command = self.popupTransfer)
 
         btnCreateDB = Button(frameBtn, text = 'Create DB',
                              command = lambda: self.__threadCall(self.createDB))
@@ -176,16 +192,17 @@ class myGUI():
         btnDelete   = Button(frameBtn, text = 'Remove',
                              command = self._delSelected)
         if self.debug:
-            btnDebug    = Button(frameBtn, text = 'Create Fav',
-                                 command = lambda : self.__threadCall(self.tool.createFavoriteView, self.pathVar.get() + self.mainDB, self.debug))
-            btnDebug.grid(column = 0, row = 3, sticky = 'nsew')
+            btnDebug    = Button(frameBtn, text = 'Test update time',
+                                 command = self.updateTime)
+            btnDebug.grid(column = 1, row = 3, sticky = 'nsew')
         # btnCompZip.pack(side = TOP, padx = 10)
         btnCompZip.grid(column = 0, row = 0, sticky = 'nsew')
         btnDownload.grid(column = 1, row = 0, sticky = 'nsew')
         btnCreateDB.grid(column = 0, row = 1, sticky = 'nsew')
         btnLoadDB.grid(column = 1, row = 1, sticky = 'nsew')
-        btnLoadFav.grid(column = 2, row = 1, sticky = 'nsew')
-        btnDelete.grid(column = 0, row = 2, sticky = 'nsew')
+        btnLoadFav.grid(column = 0, row = 2, sticky = 'nsew')
+        btnDelete.grid(column = 0, row = 3, sticky = 'nsew')
+        btnTransfer.grid(column = 2, row = 1, sticky = 'nsew')
         # btnTest.grid(column = 0, row = 1, sticky = 'nsew')
 
     def __getCurrentEntry(self):
@@ -195,10 +212,12 @@ class myGUI():
         path.replace('\\', r'\\')
         return path
 
-    def __threadCall(self, sFunc, *args):
+    def __threadCall(self, sFunc, *args, bWaitFinish = False):
         qThread = threading.Thread(target = sFunc, args = args)
         self.threads.append(qThread)
         qThread.start()
+        if bWaitFinish:
+            qThread.join()
 
     def __onDoubleClick(self, event):
         # Double click to load search result to listbox
@@ -225,15 +244,6 @@ class myGUI():
         # function to load DB to self.db
         self.db = self.tool.readDB(self.pathVar.get() + self.mainDB, self.tool.mainTableName)
 
-    def _callBack(self, *args):
-        '''
-        Function to invoke warning pop up from event
-        :param args:
-        :return:
-        '''
-        print('Start Call Back on Funcion - popupWarning')
-        return lambda : self.popupWarning(title = args[0], text = args[1], bDestroy = args[2])
-
     def _convertTupToList(self, list):
         '''
         Function to convert tuple element of a list to a simple list
@@ -254,12 +264,11 @@ class myGUI():
             self.curPath = self.pathVar.get()
 
     def zipFolder(self, textField):
-        self.__threadCall(self.popupPB, self.tool.getTotalFolder(self.pathVar.get()), 'zip')
+        self.__threadCall(self.popupPB, self.tool.getTotalFolder(self.pathVar.get()))
         self.tool.compressSeparateFolder(self.pathVar.get(), textField)
 
-    def searchAndShow(self, string, lboxWg):
+    def searchAndShow(self, string, lboxWg, tags = ''):
         # Function to search for an input in database and show result on a list
-        #TODO: try to find a way searching regardless case sensitive
         lstRes_caps = []
         if string == '':
             self.loadAll(lboxWg)
@@ -307,13 +316,13 @@ class myGUI():
             self.lang.set(self.db[input]['lang'])
             self.size.set(self.db[input]['size'])
             self.page.set(self.db[input]['page'])
-            self.ctime.set(self.db[input]['ctime'])
+            self.ctime.set(time.ctime(float(self.db[input]['ctime'])))
             self.visit.set(self.db[input]['visit'])
             self.tags.set(self.db[input]['tags'])
             self.cmt.set(self.db[input]['cmt'])
 
             if self.debug:
-                print("\nFav value: %s - type: %s" % (self.db[input]['fav'], type(self.db[input]['fav'])))
+                print("\nTime value: %s - type: %s" % (self.db[input]['ctime'], type(self.db[input]['fav'])))
 
             if self.db[input]['fav'] == 1:
                 self.fav.set('Epic')
@@ -327,9 +336,10 @@ class myGUI():
         self.searchedList = lstAll
         self.loadResult(lstAll, lboxWg)
 
-    def loadResult(self, lstSearch, lboxWg):
+    def loadResult(self, lstSearch, lboxWg, sort = True):
         # Function to load the list of search result to listbox
-        lstSearch.sort()
+        if sort:
+            lstSearch.sort()
         lboxWg.delete(0, END)
 
         for title in lstSearch:
@@ -356,9 +366,21 @@ class myGUI():
     def loadFavorite(self, lboxWg):
         viewFav   = sqlite3.connect(self.pathVar.get() + self.mainDB)
         favList = viewFav.execute('select * from favorite').fetchall()
-        if len(favList) != 0:
-            self.searchedList = self._convertTupToList(favList)
+        self.searchedList = self._convertTupToList(favList)
         self.loadResult(self.searchedList, lboxWg)
+        viewFav.close()
+
+    def loadLatest(self):
+        """
+        Load most recent added entries. Default is 50.
+        :return:
+        """
+        dbConn = sqlite3.connect(self.pathVar.get() + self.mainDB)
+        latestList = dbConn.execute('select title from hentai \
+                                    order by createtime DESC \
+                                     limit 100').fetchall()
+        self.searchedList = self._convertTupToList(latestList)
+        self.loadResult(self.searchedList, self.selection, sort = False)
 
     def saveToFavourite(self):
         '''
@@ -380,7 +402,7 @@ class myGUI():
             self.db[selectFile]['fav'] = 1
         else:
             # Popup warning
-            self._callBack('Errrror!','Already added', True)
+            self.popupWarning('Errrror!','Already added')
             print('Added - %s' %selectFile)
 
         dbFav.close()
@@ -394,14 +416,13 @@ class myGUI():
         dbFav = sqlite3.connect(self.pathVar.get() + self.mainDB)
 
         selectFile = self.loadSelected(self.searchedList, self.selection)
-        dbCursor = dbFav.execute('select * from favorite where title="%s"' % selectFile)
-        checkData = dbCursor.fetchall()
-        if len(checkData) != 0:
-            dbFav.execute('delete from favorite where title= "%s"' % selectFile)
-            return 0
-        else: # Not likely to happen since we select from fav list but just in case.
+        try:
+            dbFav.execute('update hentai set fav = 0 where title="%s"' % selectFile)
+            dbFav.commit()
+            self.db[selectFile]['fav'] = 0
+        except:
             self.popupWarning(title = 'Errrrr!', text = 'Entry is not added to Fav yet')
-            return 1
+        dbFav.close()
 
     def createDB(self):
         # function to trigger generating database.
@@ -424,13 +445,53 @@ class myGUI():
         except:
             print("Something's wrong with cmd call")
 
-    def transferDB(self):
+    def transferDB(self, dbPathA, dbPathB):
         '''
         Function to transfer data from one db to another
+        :param dbPathA: path to original db is located
+        :param dbPathB: path to target db
+        :return:
+        '''
+        dbA = sqlite3.connect(dbPathA + self.mainDB)
+        dbB = sqlite3.connect(dbPathB + self.mainDB)
+
+        cursor = dbA.execute('select * from hentai')
+        dbAEntries = cursor.fetchall()
+        for i in range(len(dbAEntries)):
+            checkExist = dbB.execute('select title from hentai where title = "%s"' % dbAEntries[i][0]).fetchall()
+            if len(checkExist) == 0:
+                print('Transfering %s' % dbAEntries[i][0])
+                dbB.execute('insert into hentai(title, language, size, page, createtime, comment, visit, tags, fav) \
+                            values ("{0}","{1}",{2},{3},"{4}","{5}",{6},"{7}",{8})'.format(*dbAEntries[i]))
+                self.transferFile(dbAEntries[i][0], dbPathA, dbPathB)
+                dbA.execute('delete from hentai where title = "%s" ' % (dbAEntries[i][0]))
+                print('Transfer complete!')
+            else:
+                print(dbAEntries[i][0] + '\n')  # Flush to a list so we can manually decide what to do next?
+
+        dbB.commit()
+        dbA.commit()
+        dbA.close()
+        dbB.close()
+
+    def transferFile(self, file, dirA, dirB):
+        """
+        Move file from A - > B
+        :param file: filename
+        :param dirA: path to dir A
+        :param dirB: path to dir B
+        :return:
+        """
+        self.tool.moveIfExist(dirA + file + '.zip', dirB)
+
+    def popupTransfer(self):
+        '''
+        Create a window for choosing which db path to be used
         :return:
         '''
         self.transWin = Toplevel()
         self.transWin.title = 'Transfer data'
+        self.transWin.geometry("300x200")
         pathA = StringVar()
         pathB = StringVar()
         pathAList = [u"H:\Doujin-Manga\\",
@@ -441,16 +502,13 @@ class myGUI():
         pathB.set(pathBList[0])
 
         dbA = OptionMenu(self.transWin, pathA, *pathAList)
-        tmpList = pathBList
-        try:
-            del tmpList[tmpList.index(pathA.get())]
-        except ValueError:
-            pass
-        dbB = OptionMenu(self.transWin, pathB, *tmpList)
+        dbB = OptionMenu(self.transWin, pathB, *pathBList)
 
         dbA.pack(padx = 10, pady = 5)
         dbB.pack(padx = 10, pady = 5)
 
+        btnStart = Button(self.transWin, text = 'Start', command = lambda: self.__threadCall(self.transferDB, pathA.get(), pathB.get()))
+        btnStart.pack(pady = 3, side = BOTTOM)
 
     def popupWarning(self, title = None, text = None, bDestroy = False):
         title = 'Sorry !' if title is None else title
@@ -461,7 +519,7 @@ class myGUI():
         sorLabel = Label(self.win, text = text, height = 5, width = 50)
         sorLabel.pack()
 
-        if bDestroy:
+        if bDestroy:    # does not seem to work yet
             sleep(5)
             self.win.destroy()
 
@@ -485,11 +543,6 @@ class myGUI():
     def popupMenu(self, event):
         self.popMenu.post(event.x_root, event.y_root)
 
-    # def __resize(self, event):
-    #     widg = event.widget
-    #     width, height = event.width - 100, event.height - 100
-    #     widg.config(width = width, height = height)
-
     def popupDownload(self):
         self.downWin = Toplevel()
         self.downWin.title('Download New')
@@ -506,30 +559,69 @@ class myGUI():
         self.textGalleryProcess = Text(self.downWin)
         self.textGalleryProcess.grid(column = 0, row = 2, columnspan = 2, sticky = 'nsew')
 
-    def popupAddComment(self):
+    def popupAddInfo(self):
         '''
         Show a small window after clicking AddFav to add the note for the current entry.
         :return: None
         '''
         self.noteWin = Toplevel()
-        self.noteWin.title('Comment')
-        cmtEntry = Entry(self.noteWin, textvariable = self.cmtVar, width = 50)
+        self.noteWin.title('Comment & Tags')
+        self.cmtVar.set('') # Clear old data
+        self.tagVar.set('') # Clear old data
+        cmtEntry = Entry(self.noteWin, textvariable = self.cmtVar, width = 100)
+        tagEntry = Entry(self.noteWin, textvariable = self.tagVar, width = 50)
+        self.titleVar.set(self.title.get())
+        titleEntry = Entry(self.noteWin, textvariable = self.titleVar)
         # cmtEntry.focus_set()
         cmtEntry.selection_range(0, END)
 
-        btnDone   = Button(self.noteWin, text = 'Finish', command = self._saveAndDestroy)
+        selectFile = self.loadSelected(self.searchedList, self.selection)
+        btnDone   = Button(self.noteWin, text = 'Finish', command = lambda : self._saveAndDestroy(selectFile,
+                                                                                                  self.cmtVar.get(),
+                                                                                                  self.tagVar.get(),
+                                                                                                  self.titleVar.get()))
         btnCancel = Button(self.noteWin, text = 'Cancel', command = self.noteWin.destroy)
 
-        cmtEntry.grid(column = 0, row = 0, columnspan = 2, sticky = 'nsew')
-        btnDone.grid(column = 0, row = 1, padx = 10)
-        btnCancel.grid(column = 1, row = 1, padx = 10)
+        Label(self.noteWin, text = 'Comment').grid(column = 0, row = 0, sticky = 'nsew')
+        Label(self.noteWin, text = 'Tag').grid(column = 0, row = 1, sticky = 'nsew')
+        Label(self.noteWin, text = 'Title').grid(column = 0, row = 2, sticky = 'nsew')
+        cmtEntry.grid(column = 1, row = 0, columnspan = 2, sticky = 'nsew')
+        tagEntry.grid(column = 1, row = 1, columnspan = 2, sticky = 'nsew')
+        titleEntry.grid(column = 1, row = 2, columnspan = 2, sticky = 'nsew')
+        btnDone.grid(column = 0, row = 3, padx = 10)
+        btnCancel.grid(column = 1, row = 3, padx = 10)
 
-    def _saveAndDestroy(self):
+
+    def _saveAndDestroy(self, title = None, cmt = '', tag = '', tit = ''):
         '''
         A combine function to save to fav db then close the window
+        :param title: must provide title if cmt or tag is not None
         :return: 0 for success, 1 for failure
         '''
+        dbConn = sqlite3.connect(self.pathVar.get() + self.mainDB)
+        if cmt != '':
+            dbConn.execute('update hentai set comment = "%s" \
+                           where title = "%s"' % (cmt, title))
+            dbConn.commit()
+            self.db[title]['cmt'] = cmt
+        if tag != '':
+            dbConn.execute('update hentai set tags = "%s" \
+                           where title = "%s"' % (tag, title))
+            dbConn.commit()
+            self.db[title]['tags'] = tag
 
+        if tit != '' and tit != title:
+            dbConn.execute('update hentai set title = "%s" \
+                           where title = "%s"' % (tit, title))
+            ##TODO: add pdf option
+            dbConn.commit()
+            self.tool.renameFile(self.pathVar.get(), title + '.zip', tit + '.zip')
+            self.db[tit] = self.db[title]
+
+            del self.db[title]
+
+        dbConn.close()
+        sleep(0.5)
         self.noteWin.destroy()
 
     def _delSelected(self):
@@ -537,11 +629,23 @@ class myGUI():
             self.tool.removeIfExist(self.__getCurrentEntry())
             # Remove from DB
             try:
+                dbConn = sqlite3.connect(self.pathVar.get() + self.mainDB)
+                ext = '.pdf' if self.page.get() == '0' else '.zip'
+                file = self.title.get()
+                dbConn.execute('delete from hentai where title="%s"' % file)
+                dbConn.commit()
+                dbConn.close()
                 del self.db[self.title.get()]
                 messagebox.showinfo('Complete', "DB needs to be re-created.")
             except KeyError:
                 messagebox.showwarning('Warning', 'Entry %s not exist.' % self.title.get())
 
+    def updateTime(self):
+        """
+        For one time use, update the datebae with time in seconds.
+        :return:
+        """
+        self.tool.updateTime(self.pathVar.get(), self.mainDB, single = True, title = self.title.get())
 if __name__ == '__main__':
     root = Tk()
     root.minsize(height = 300, width = 400)
