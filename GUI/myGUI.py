@@ -132,13 +132,11 @@ class myGUI():
         frameOutput = Frame(parent)
         frameOutput.grid(column = 1, row = 0, rowspan = 2, sticky = E)
 
-        # Label(frameOutput, text = 'Output').grid(column = 0, row = 2, sticky = W)
-        # # this will receive the output from console
-        # textField = Text(frameOutput)
-        # textField.grid(column = 0, row = 3, sticky = N+S+E+W)
-        # textField.grid_columnconfigure(0, weight = 1)
+        Label(frameOutput, text = 'ThumbNail').grid(column = 0, row = 1, sticky = N)
 
-        # Label(frameOutput, text = 'Result').grid(column = 0, row = 0, sticky = W)
+        canvThumb = Canvas(frameOutput, width = 160)
+        canvThumb.grid(column = 0, row = 2, sticky = N)
+
         scroll = Scrollbar(frameOutput, orient = VERTICAL)
         # canvasContainer.configure(yscrollcommand = scroll.set)
         # canvasContainer.create_window((40,160), window = frameOutput, anchor = NW)
@@ -148,7 +146,7 @@ class myGUI():
         # canvasContainer.grid(column = 1, row = 0, rowspan = 2)
         # scroll.pack(side = RIGHT, fill = Y)
         scroll.grid(column = 1, row = 0, rowspan = 2, sticky = N+S)
-        self.selection = Listbox(frameOutput, height = 40, width = 160, exportselection = 0, yscrollcommand = scroll.set)
+        self.selection = Listbox(frameOutput, height = 30, width = 160, exportselection = 0, yscrollcommand = scroll.set)
         self.selection.bind("<Double-Button-1>", self.__onDoubleClick)
         self.selection.grid(column = 0, row = 0, sticky = W)
         # self.selection.pack(side = LEFT, fill = Y)
