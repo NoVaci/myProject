@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter import messagebox
+from PIL import Image, ImageTk
 import os
 try:
     from Tools.Tool import Tool
@@ -12,6 +13,9 @@ import subprocess
 from time import sleep
 import time
 import sqlite3
+import zipfile
+import random
+import re
 
 #TODO: 6/14/2017: add remove fav entry.
 #TODO: 6/30/2017: check for existing entry in fav
@@ -27,6 +31,7 @@ class myGUI():
             u"H:\Doujin-Manga\\",
             u"H:\Doujin-Manga\\test\\"
         ]
+        self.HISTORY = ['History']
 
         self.pathVar = StringVar()
         self.nameVar = StringVar()
@@ -40,7 +45,7 @@ class myGUI():
 
         if not self.debug:
             self.db      = self.tool.readDB(self.dirPath + self.mainDB, self.tool.mainTableName)
-
+            self.createSearchDict()
         # Store searched list
         self.searchedList = []
 
@@ -60,6 +65,12 @@ class myGUI():
         self.cmtVar  = StringVar()
         self.tagVar  = StringVar()
         self.titleVar = StringVar()
+
+        # List stores thumbnail images.
+        self.arrImg   = []
+
+        # Offset for navigating search index
+        self.offSet   = 0
 
     def initializeGUI(self, parent):
         frameInput = Frame(parent)  # Test: input + button in 1 frame
@@ -84,17 +95,20 @@ class myGUI():
                 command = lambda: self.__threadCall(self.loadComic)) \
                 .grid(column = 1, row = 1, sticky = NW)
 
+        self.histList = OptionMenu(frameInput, self.nameVar, *self.HISTORY)
+        self.histList.grid(column = 0, row = 3, sticky = NW, pady = 1)
+
         nameSearch = Entry(frameInput, textvariable = self.nameVar, width = 30)
-        nameSearch.grid(column = 0, row = 2, columnspan = 3, sticky = NW, padx = 2)
+        nameSearch.grid(column = 0, row = 2, columnspan = 3, sticky = NW)
         nameSearch.focus_set()
         nameSearch.bind("<Return>", lambda event: self.searchAndShow(self.nameVar.get(), self.selection))
 
-        # Detail Info show
-        #   Title: <name>
-        #   Language: <Eng/Jap>
-        #   Size:
-        headerText = 'First Entry ' + ('-' * 45)
-        Label(frameInput, text = headerText, fg = 'blue').grid(column = 0, row = 3, pady = 20, sticky = W, columnspan = 2)
+        '''Detail Info show
+           Title: <name>
+           Language: <Eng/Jap>
+           Size:'''
+        # headerText = 'First Entry ' + ('-' * 45)
+        # Label(frameInput, text = headerText, fg = 'blue').grid(column = 0, row = 3, pady = 20, sticky = W, columnspan = 2)
         Label(frameInput, text = 'Title:').grid(column = 0, row = 4, sticky = W)
         Label(frameInput, textvariable = self.cutTitle, wraplength = 100, justify = CENTER).grid(column = 1, row = 4, sticky = W)
 
@@ -122,8 +136,6 @@ class myGUI():
         Label(frameInput, text = 'Favorite?:').grid(column = 0, row = 12, sticky = W)
         Label(frameInput, textvariable = self.fav).grid(column = 1, row = 12, sticky = W)
 
-        btnLatest = Button(text = 'Latest Entries', command = lambda : self.__threadCall(self.loadLatest))
-        btnLatest.grid(column = 0, row = 13, sticky = W)
         # ----------------------------------------------------
         # Right: output screen
         # Consist of
@@ -132,10 +144,16 @@ class myGUI():
         frameOutput = Frame(parent)
         frameOutput.grid(column = 1, row = 0, rowspan = 2, sticky = E)
 
-        Label(frameOutput, text = 'ThumbNail').grid(column = 0, row = 1, sticky = N)
+        Button(frameOutput, text = 'ThumbNail', command = self.loadThumbNail).grid(column = 0, row = 2, sticky = N)
 
-        canvThumb = Canvas(frameOutput, width = 160)
-        canvThumb.grid(column = 0, row = 2, sticky = N)
+        self.lblThumb1 = Label(frameOutput)
+        self.lblThumb1.grid(column = 0, row = 3, sticky = W)
+        self.lblThumb2 = Label(frameOutput)
+        self.lblThumb2.grid(column = 1, row = 3, sticky = W)
+        self.lblThumb3 = Label(frameOutput)
+        self.lblThumb3.grid(column = 2, row = 3, sticky = W)
+        self.lblThumb4 = Label(frameOutput)
+        self.lblThumb4.grid(column = 3, row = 3, sticky = W)
 
         scroll = Scrollbar(frameOutput, orient = VERTICAL)
         # canvasContainer.configure(yscrollcommand = scroll.set)
@@ -145,13 +163,18 @@ class myGUI():
         # Placement
         # canvasContainer.grid(column = 1, row = 0, rowspan = 2)
         # scroll.pack(side = RIGHT, fill = Y)
-        scroll.grid(column = 1, row = 0, rowspan = 2, sticky = N+S)
+        scroll.grid(column = 4, row = 0, rowspan = 2, sticky = N+S)
         self.selection = Listbox(frameOutput, height = 30, width = 160, exportselection = 0, yscrollcommand = scroll.set)
         self.selection.bind("<Double-Button-1>", self.__onDoubleClick)
-        self.selection.grid(column = 0, row = 0, sticky = W)
+        self.selection.grid(column = 0, row = 0, columnspan = 4, sticky = W)
         # self.selection.pack(side = LEFT, fill = Y)
         scroll.config(command = self.selection.yview, orient = VERTICAL)
 
+        # Paging button
+        Button(frameOutput, text = '>', width = 3, command = lambda: self.loadNextPage('forward'))\
+                    .grid(column = 1, row = 1, padx = 1, sticky = W)
+        Button(frameOutput, text = '<', width = 3, command = lambda: self.loadNextPage('backward'))\
+                    .grid(column = 0, row = 1, padx = 1, sticky = E)
         # Section for pop up menu
         self.popMenu = Menu(parent, tearoff = 0)
         self.popMenu.add_command(label = 'Add Fav', command = self.saveToFavourite)
@@ -172,36 +195,43 @@ class myGUI():
         btnCompZip  = Button(frameBtn, text = 'Zip Compress',
                              command = lambda : self.__threadCall(self.zipFolder, textField))
 
-        btnDownload = Button(frameBtn, text = 'Download',
-                             command = self.popupDownload)
+        btnDownload = Button(frameBtn, text = 'Download', command = self.popupDownload)
 
-        btnTransfer = Button(frameBtn, text = 'Transfer',
-                             command = self.popupTransfer)
+        btnTransfer = Button(frameBtn, text = 'Transfer', command = self.popupTransfer)
 
         btnCreateDB = Button(frameBtn, text = 'Create DB',
                              command = lambda: self.__threadCall(self.createDB))
 
-        btnLoadDB   = Button(frameBtn, text = 'Load DB',
-                             command = self.__loadDB)
+        btnLoadDB   = Button(frameBtn, text = 'Load DB', command = self.__loadDB)
 
-        btnLoadFav  = Button(frameBtn, text = 'Load Fav',
-                           command = lambda : self.loadFavorite(self.selection))
+        btnLoadFav  = Button(frameBtn, text = 'Load Fav', command = self.loadFavorite)
 
-        btnDelete   = Button(frameBtn, text = 'Remove',
-                             command = self._delSelected)
+        btnLoadJap  = Button(frameBtn, text = 'Load Jap Only', command = self.loadJapEntries)
+
+        btnDelete   = Button(frameBtn, text = 'Remove', command = self._delSelected)
+
+        btnLatest = Button(frameBtn, text = 'Latest Entries', command = lambda: self.__threadCall(self.loadLatest))
+
+        btnReadLater = Button(frameBtn, text = 'Read Later', command = lambda : self.__threadCall(self.loadReadLater))
+        
+        btnSurprise = Button(frameBtn, text = 'Surprise Me', command = lambda : self.__threadCall(self.loadSurprise))
         if self.debug:
             btnDebug    = Button(frameBtn, text = 'Test update time',
                                  command = self.updateTime)
             btnDebug.grid(column = 1, row = 3, sticky = 'nsew')
         # btnCompZip.pack(side = TOP, padx = 10)
-        btnCompZip.grid(column = 0, row = 0, sticky = 'nsew')
-        btnDownload.grid(column = 1, row = 0, sticky = 'nsew')
-        btnCreateDB.grid(column = 0, row = 1, sticky = 'nsew')
-        btnLoadDB.grid(column = 1, row = 1, sticky = 'nsew')
-        btnLoadFav.grid(column = 0, row = 2, sticky = 'nsew')
-        btnDelete.grid(column = 0, row = 3, sticky = 'nsew')
-        btnTransfer.grid(column = 2, row = 1, sticky = 'nsew')
-        # btnTest.grid(column = 0, row = 1, sticky = 'nsew')
+        btnCompZip.grid(column = 0, row = 0, sticky = W)
+        btnDownload.grid(column = 1, row = 0, sticky = W)
+        btnCreateDB.grid(column = 0, row = 1, sticky = W)
+        btnLoadDB.grid(column = 1, row = 1, sticky = W)
+        btnTransfer.grid(column = 2, row = 1, sticky = W)
+        btnLoadFav.grid(column = 0, row = 2, sticky = W)
+        btnLoadJap.grid(column = 1, row = 2, sticky = W)
+        btnLatest.grid(column = 0, row = 3, sticky = W, pady = 5)
+        btnReadLater.grid(column = 1, row = 3, sticky = W, padx = 5)
+        btnSurprise.grid(column = 2, row = 3, sticky = W)
+        btnDelete.grid(column = 0, row = 4, sticky = W)
+        # btnTest.grid(column = 0, row = 1, sticky = W)
 
     def __getCurrentEntry(self):
         # Return the file path of current selected entry
@@ -242,17 +272,7 @@ class myGUI():
         # function to load DB to self.db
         self.db = self.tool.readDB(self.pathVar.get() + self.mainDB, self.tool.mainTableName)
 
-    def _convertTupToList(self, list):
-        '''
-        Function to convert tuple element of a list to a simple list
-        :param list: list contains tuple with len of 1. [(,),(,)]
-        :return: list
-        '''
-        resList = []
-        for i in range(len(list)):
-            if type(list[i]) == tuple:
-                resList.append(list[i][0])
-        return resList
+        self.createSearchDict()
 
     def detectPathChange(self):
         # Function to load DB when detecting a change in path folder
@@ -265,31 +285,57 @@ class myGUI():
         self.__threadCall(self.popupPB, self.tool.getTotalFolder(self.pathVar.get()))
         self.tool.compressSeparateFolder(self.pathVar.get(), textField)
 
+    def createSearchDict(self):
+        '''
+        Create an all lower case list for searching
+        :return: list of all lower case
+        '''
+        self.lowerDict = {}
+        for name in self.db.keys():
+            self.lowerDict.update({name.lower(): name})
+        return self.lowerDict
+
+    def updateHistoryList(self):
+        '''
+        Update the history Option menu with new item from self.HISTORY
+        :return: None
+        '''
+        menu = self.histList['menu']
+        menu.delete(0, END)
+        for item in self.HISTORY:
+            menu.add_command(label = item, command = lambda value = item: self.nameVar.set(value))
+
     def searchAndShow(self, string, lboxWg, tags = ''):
         # Function to search for an input in database and show result on a list
-        lstRes_caps = []
+        lstRst = []
         if string == '':
             self.loadAll(lboxWg)
         else:
-            lstRes_lower    = list(filter(lambda x: string.lower() in x, self.db.keys()))
-            lstRes_title    = list(filter(lambda x: string.title() in x, self.db.keys()))
-            lstRes_origin   = list(filter(lambda x: string in x, self.db.keys()))
-
-            if len(string.split(' ')) > 1:
-                lstRes_caps     = list(filter(lambda x: string.capitalize() in x, self.db.keys()))
-            lstRes = lstRes_lower + lstRes_caps + lstRes_title + lstRes_origin
-            lstRes = self.removeDuplicate(lstRes)
-
-            lstRes.sort()
-
-            if len(lstRes) > 0:
-                firstEntry = lstRes[0]
-                self.searchedList = lstRes
+            if '*' in string:
+                string = string.replace('*', '.*')
+                try:
+                    regExp = re.compile(string)
+                    lstRst = list(self.lowerDict[name] for name in self.lowerDict if regExp.match(name))
+                except IndexError:
+                    print("Require at least 2 words for reg search")
             else:
-                firstEntry = 'Not Found'
+                lstRst = list(self.lowerDict[name] for name in self.lowerDict if string in name)
 
-            self.loadResult(lstRes, lboxWg)
-            self.loadEntry(firstEntry)
+        if len(lstRst) > 0:
+            firstEntry = lstRst[0]
+            self.searchedList = lstRst
+
+            # Add searched (and found results) entry to history list
+            if string not in self.HISTORY:
+                self.HISTORY.insert(0, string)
+                if len(self.HISTORY) == 10:
+                    del self.HISTORY[-1]
+                self.updateHistoryList()
+        else:
+            firstEntry = 'Not Found'
+
+        self.loadResult(lstRst, lboxWg)
+        self.loadEntry(firstEntry)
 
     def whichSelected(self, lboxWg) :
         return int(lboxWg.curselection()[0])
@@ -346,26 +392,70 @@ class myGUI():
     def loadSelected(self, lst, lboxWg):
         return lst[self.whichSelected(lboxWg)]
 
+    def loadThumbNail(self):
+        '''
+        Function to load a few images of a zip folder.
+        :return:
+        '''
+        zipType = '.pdf' if self.page.get() == '0' else '.zip'
+        if zipType == '.zip':
+            pathToFile = self.pathVar.get() + self.title.get() + zipType
+            index = 0 # Set the index of image
+            count = 0
+            self.arrImg = [] # Reset the list of previous load
+            with zipfile.ZipFile(pathToFile, 'r') as zipRead:
+                for item in zipRead.infolist():
+                    if index % 3 == 0:
+                        index += 1
+                        imgZip = Image.open(zipRead.open(item))
+                        imgZip = imgZip.resize((250, 300), Image.ANTIALIAS)
+
+                        self.img = ImageTk.PhotoImage(imgZip)
+                        self.arrImg.append(self.img)
+                        count += 1
+
+                        if count == 4:
+                            break
+                    else:
+                        index += 1
+
+            self.lblThumb1.config(width = self.arrImg[0].width(), image = self.arrImg[0])
+            self.lblThumb2.config(width = self.arrImg[1].width(), image = self.arrImg[1])
+            self.lblThumb3.config(width = self.arrImg[2].width(), image = self.arrImg[2])
+            self.lblThumb4.config(width = self.arrImg[3].width(), image = self.arrImg[3])
+
+    def loadReadLater(self):
+        '''
+        Function to load favorite added entries without any view
+        :return:
+        '''
+        viewLater = sqlite3.connect(self.pathVar.get() + self.mainDB)
+        rlLIst    = viewLater.execute('select * from favorite,hentai where \
+                                      (favorite.title=hentai.title and hentai.visit=0)').fetchall()
+        self.searchedList = self.tool.convertTupToList(rlLIst)
+        self.loadResult(self.searchedList, self.selection)
+        viewLater.close()
+
     def loadComic(self):
         # Function to open up CDisplayex and load the current selected entry
         # For manual test:
         # subprocess.call('C:\\Program Files\\CDisplayEx\\CDisplayEx.exe "H:\\Doujin-Manga\\<>.zip"'
-        tail = '.pdf' if self.page.get() == '0' else '.zip'
-        pathToFile = self.pathVar.get() + self.title.get() + tail
-        pathToFile.replace('\\', r'\\')
-        subprocess.call('C:\\Program Files\\CDisplayEx\\CDisplayEx.exe "%s"' % pathToFile)
         visitCount = self.db[self.title.get()]['visit']
         visitCount += 1
         # Update to the current view
         self.db[self.title.get()]['visit'] = visitCount
         # Update to the main database
         self.tool.updateDatabase(self.pathVar.get() + self.mainDB, self.title.get(), visitCount, column = 'visit')
+        tail = '.pdf' if self.page.get() == '0' else '.zip'
+        pathToFile = self.pathVar.get() + self.title.get() + tail
+        pathToFile.replace('\\', r'\\')
+        subprocess.call('C:\\Program Files\\CDisplayEx\\CDisplayEx.exe "%s"' % pathToFile)
 
-    def loadFavorite(self, lboxWg):
+    def loadFavorite(self):
         viewFav   = sqlite3.connect(self.pathVar.get() + self.mainDB)
-        favList = viewFav.execute('select * from favorite').fetchall()
-        self.searchedList = self._convertTupToList(favList)
-        self.loadResult(self.searchedList, lboxWg)
+        favList   = viewFav.execute('select * from favorite').fetchall()
+        self.searchedList = self.tool.convertTupToList(favList)
+        self.loadResult(self.searchedList, self.selection)
         viewFav.close()
 
     def loadLatest(self):
@@ -377,9 +467,69 @@ class myGUI():
         latestList = dbConn.execute('select title from hentai \
                                     order by createtime DESC \
                                      limit 100').fetchall()
-        self.searchedList = self._convertTupToList(latestList)
+        self.offSet += 100
+        self.searchedList = self.tool.convertTupToList(latestList)
         self.loadResult(self.searchedList, self.selection, sort = False)
+        dbConn.close()
 
+    def loadJapEntries(self):
+        '''
+        Show only the
+        :return:
+        '''
+        dbConn = sqlite3.connect(self.pathVar.get() + self.mainDB)
+        latestList = dbConn.execute('select title from hentai \
+                                            where language="Jap"').fetchall()
+        self.searchedList = self.tool.convertTupToList(latestList)
+        self.loadResult(self.searchedList, self.selection, sort = False)
+        dbConn.close()
+
+    def loadSurprise(self):
+        '''
+        Load random entries which visit = 0. List of 50.
+        :return:
+        '''
+        viewRand = sqlite3.connect(self.pathVar.get() + self.mainDB)
+        randList = viewRand.execute('select * from hentai where visit=0').fetchall()
+
+        self.searchedList = [] # Clear the list
+        # list to store random entries
+        tmpArr = self.tool.convertTupToList(randList)
+        for count in range(0,50):
+            index = random.randint(0, len(tmpArr))
+            self.searchedList.append(tmpArr[index])
+        
+        self.loadResult(self.searchedList, self.selection)
+        viewRand.close()
+
+    def loadNextPage(self, navVector, number = 100):
+        '''
+        Load next <number> items in the list if invoked
+        :param number: default is 100 items
+        :param navVector: forward or backward
+        :return: None
+        '''
+
+        if navVector == 'backward' and self.offSet <= 0:
+            pass
+        else:
+            dbConn = sqlite3.connect(self.pathVar.get() + self.mainDB)
+            if navVector == 'forward':
+                latestList = dbConn.execute('select title from hentai \
+                                            order by createtime DESC \
+                                             limit %s offset %s' % (number, self.offSet)).fetchall()
+                self.offSet += number
+
+            else:
+                self.offSet -= number * 2
+                latestList = dbConn.execute('select title from hentai \
+                                            order by createtime DESC \
+                                             limit %s offset %s' % (number, self.offSet)).fetchall()
+
+            self.searchedList = self.tool.convertTupToList(latestList)
+            self.loadResult(self.searchedList, self.selection, sort = False)
+            dbConn.close()
+        
     def saveToFavourite(self):
         '''
         Function to save current selected entry to favourite list.
@@ -463,12 +613,12 @@ class myGUI():
                             values ("{0}","{1}",{2},{3},"{4}","{5}",{6},"{7}",{8})'.format(*dbAEntries[i]))
                 self.transferFile(dbAEntries[i][0], dbPathA, dbPathB)
                 dbA.execute('delete from hentai where title = "%s" ' % (dbAEntries[i][0]))
+                dbB.commit()
+                dbA.commit()
                 print('Transfer complete!')
             else:
                 print(dbAEntries[i][0] + '\n')  # Flush to a list so we can manually decide what to do next?
-
-        dbB.commit()
-        dbA.commit()
+        
         dbA.close()
         dbB.close()
 
@@ -644,6 +794,7 @@ class myGUI():
         :return:
         """
         self.tool.updateTime(self.pathVar.get(), self.mainDB, single = True, title = self.title.get())
+
 if __name__ == '__main__':
     root = Tk()
     root.minsize(height = 300, width = 400)

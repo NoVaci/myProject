@@ -285,7 +285,8 @@
 # FROM  COMPANY;
 import sqlite3
 
-conn = sqlite3.connect('test.db')
+# conn = sqlite3.connect('test.db')
+conn = sqlite3.connect('H:/Doujin-Manga/test.db')
 # conn.execute('''CREATE TABLE COMPANY
 #          (ID       INT PRIMARY KEY        NOT NULL,
 #          NAME      TEXT                   NOT NULL,
@@ -309,10 +310,9 @@ conn = sqlite3.connect('test.db')
 # data = cursor.fetchall()
 
 # conn.commit()
-cursor = conn.execute('select * from company')
+name = "Boshi Soukan ~Haha no Onegai~ _ Incest -Mother&#39;s Request"
+cursor = conn.execute('select * from hentai where title="%s"' % name)
 data = cursor.fetchall()
-print(type(data))
-print(data)
 for row in cursor:
    print("title = ", row[0])
    print("lang = ", row[1])

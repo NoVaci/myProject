@@ -50,7 +50,7 @@ class Tool:
 
     def getExcludedFile(self, dirPath):
         num = 0
-        for ext in ['test', 'test.txt', 'fav.txt', 'Guro']:
+        for ext in ['test', 'test.db', 'fav.db', 'Guro', 'main.db']:
             num += 1 if os.path.exists(dirPath + ext) else 0
         return num
 
@@ -122,7 +122,7 @@ class Tool:
         :return:
         '''
         self.removeIfExist(dirPath + dbName)
-
+        self.curDB = 0
         if self.createTable(dirPath + dbName):
             dbConn = sqlite3.connect(dirPath + dbName)
         else:
@@ -149,7 +149,6 @@ class Tool:
                 self.curDB += 1
         dbConn.close()
 
-    #TODO: not complete, implement getting attribute of the added file.
     def updateDatabase(self, fullDBPath, *newEntry, column= None):
         '''
         function to update the database to avoid re-populate the whole database.
@@ -223,7 +222,7 @@ class Tool:
             fSize = fStat.st_size
             fSize = round((fSize / (1024 ** 2)), 2)
             # Get created time
-            cTime = time.ctime(fStat.st_ctime)
+            cTime = fStat.st_ctime
 
             if not self.isEnglish(file[:-4]):
                 sLang = 'Jap'
@@ -243,7 +242,7 @@ class Tool:
         # Function to compress folder in a directory to separate .zip file.
         # Except: compressed files.
         self.listCompressed(dirPath)
-        count = 0
+        self.curZip = 0
         for folder in os.listdir(dirPath):
 
             if folder[-3:] in ['zip', '.py', 'rar', 'pdf', 'txt', '.db'] or folder in ['Guro', 'test']:
@@ -256,8 +255,7 @@ class Tool:
                         for file in files:
                             zipName.write(os.path.abspath(os.path.join(root, file)), arcname = file)
                     zipName.close()
-                    count += 1
-                    textWg.insert(END, folder + ' ==> Done compressed. Total: %s\n' % str(count))
+                    textWg.insert(END, folder + ' ==> Done compressed. Total: %s\n' % str(self.curZip))
                     textWg.see(END)
 
                     self.curZip += 1
@@ -294,6 +292,16 @@ class Tool:
         # Function to check if a file existed, remove if Yes.
         if os.path.exists(filePath):
             os.remove(filePath)
+
+    def renameFile(self, dirPath, oldName, newName):
+        if os.path.exists(dirPath + oldName):
+            os.rename(dirPath + oldName, dirPath + newName)
+
+    def moveIfExist(self, filePath, dstDir):
+        try:
+            shutil.move(filePath, dstDir)
+        except FileNotFoundError:
+            print('Check file location')
 
     def getCommonPattern(self, dirPath):
         # Function to summarize general pattern of picture file
@@ -411,3 +419,75 @@ class Tool:
             self.replaceFileInZip(dirPath, '')
         else:
             self.replaceFileInFolder(dirPath,'')
+
+    def updateTime(self, dirPath, dbName, single = True, title = ''):
+        dbConn = sqlite3.connect(dirPath + dbName)
+        if single:
+            fStat = os.stat(dirPath + title + '.zip')
+            coreTime = fStat.st_ctime
+            dbConn.execute('update hentai set createtime="%s" \
+                            where title = "%s"' % (coreTime, title))
+            dbConn.commit()
+        else:
+            count  = 0
+            for file in os.listdir(dirPath):
+                if 'test' not in file or 'fav' not in file or 'Guro' not in file:
+                    fStat = os.stat(dirPath + file)
+                    coreTime = fStat.st_ctime
+                    dbConn.execute('update hentai set createtime="%s" \
+                                    where title = "%s"' %(coreTime, file[:-4]))
+                    count += 1
+                    print('Finished: %s\n' % count)
+
+                    dbConn.commit()
+
+        dbConn.close()
+
+    def convertTupToList(self, list):
+        '''
+        Function to convert tuple element of a list to a simple list
+        :param list: list contains tuple with len of 1. [(,),(,)]
+        :return: list
+        '''
+        resList = []
+        for i in range(len(list)):
+            if type(list[i]) == tuple:
+                resList.append(list[i][0])
+        return resList
+
+    def fillMissing(self, dirPath, dbName):
+        '''
+        Find unregistered entry and fill in the database
+        '''
+        # Get all entries from database
+        dbEntries = sqlite3.connect(dirPath + dbName)
+        lEntries    = dbEntries.execute('select * from hentai').fetchall()
+        lEntries  = self.convertTupToList(lEntries)
+
+        tmpCmt = 'Not Added'
+        tmpTag = 'Not Added'
+        initFav = 0
+        count = 0   # debug
+        for file in os.listdir(dirPath):
+            if '.zip' in file and '.db' not in file:
+                if file[:-4] not in lEntries:
+                    err, tmpAttr = self.getFileAttribute(dirPath, file)
+                    if err == 1 or err == -1:
+                        print('Error - %s - Invalid zip' % file)
+                        continue
+                    try:
+                        count += 1
+                        print(file + ' - Total: ' + str(count))
+                        dbEntries.execute('insert into %s (title, language, size, page, createtime, comment, visit, tags, fav) \
+                                                       values ("%s", "%s", %s, %s, "%s", "%s", %s, "%s", %s)'
+                                       % (self.mainTableName, file[:-4], tmpAttr[0], tmpAttr[1], tmpAttr[2], tmpAttr[3],
+                                          tmpCmt, tmpAttr[4], tmpTag, initFav))
+                    except sqlite3.IntegrityError:
+                        print(file[:-4])
+                        print('\n')
+
+                    dbEntries.commit()
+
+        dbEntries.close()
+
+

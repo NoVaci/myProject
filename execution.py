@@ -1,5 +1,5 @@
 try:
-    from Tools import Tool
+    from GUI.Tools import Tool
 except ImportError:
     raise ImportError('Lacking tool class')
 
@@ -8,8 +8,9 @@ if __name__ == '__main__':
     #TODO: implement replace file name for new folder only
 
     # Compress hentai folder to zip
-    dirPath = (u"H:/Doujin-Manga/test/")
-    dbPath  = dirPath + 'test.db'
+    # dirPath = (u"H:/Doujin-Manga/")
+    dirPath = (u"I:/H-Colle/")
+    dbName  = 'test.db'
     # tool.listCompressed(dirPath)
     # tool.compressSeparateFolder(dirPath)
 
@@ -23,7 +24,7 @@ if __name__ == '__main__':
     # tool.getCommonPattern(dirPath)
 
     # tool.listEverything(dirPath)
-    tool.createDatabase(dirPath, dbPath)
+    # tool.createDatabase(dirPath, dbPath)
     # dB = tool.readDB(dirPath + dbName)
     # tool.removeFolder(dirPath)
     # length = tool.getExcludedFile(dirPath)
@@ -31,3 +32,4 @@ if __name__ == '__main__':
     # length = tool.getExcludedFile(dirPath)
     # length = tool.getTotalFolder(dirPath)
     # tool.replaceFile(dirPath)
+    tool.fillMissing(dirPath, dbName)
