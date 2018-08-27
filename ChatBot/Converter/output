@@ -1,0 +1,832 @@
+C:\Users\NoVaci\PycharmProjects\myProject\venv\Scripts\python.exe C:/Users/NoVaci/PycharmProjects/myProject/ChatBot/Converter/Converter.py
+{
+  "participants": [
+    {
+      "name": "Khoa Nguyễn Trọng"
+    }
+  ],
+  "messages": [
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535201045256,
+      "content": "Đ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535201033593,
+      "content": "Ỵ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535201032812,
+      "content": "Ỹ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535201032227,
+      "content": "Ỷ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535201031069,
+      "content": "Ỳ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535201029924,
+      "content": "Ý",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535201018023,
+      "content": "Ự",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535201016757,
+      "content": "Ữ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535201015552,
+      "content": "Ử",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535201014801,
+      "content": "Ừ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535201013997,
+      "content": "Ứ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535201011693,
+      "content": "Ụ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535201010889,
+      "content": "Ũ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535201009645,
+      "content": "Ủ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535201008934,
+      "content": "Ù",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535201008406,
+      "content": "Ú",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200988662,
+      "content": "Ợ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200985209,
+      "content": "Ỡ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200983865,
+      "content": "Ở",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200982764,
+      "content": "Ờ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200981210,
+      "content": "Ớ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200977765,
+      "content": "Ơ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200974409,
+      "content": "Ộ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200973468,
+      "content": "Ỗ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200970523,
+      "content": "Ổ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200969608,
+      "content": "Ồ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200968655,
+      "content": "Ố",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200967625,
+      "content": "Ô",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200962551,
+      "content": "Ọ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200961940,
+      "content": "Õ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200961103,
+      "content": "Ỏ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200959872,
+      "content": "Ò",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200958888,
+      "content": "Ó",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200953091,
+      "content": "Ị",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200952182,
+      "content": "Ĩ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200951297,
+      "content": "Ỉ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200950529,
+      "content": "Ì",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200949882,
+      "content": "Í",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200944696,
+      "content": "Ệ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200943817,
+      "content": "Ễ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200942821,
+      "content": "Ể",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200941948,
+      "content": "Ề",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200940890,
+      "content": "Ế",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200939863,
+      "content": "Ê",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200938050,
+      "content": "Ẹ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200937108,
+      "content": "Ẽ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200935466,
+      "content": "Ẻ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200933888,
+      "content": "È",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200933327,
+      "content": "É",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200926251,
+      "content": "Ặ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200923914,
+      "content": "Ẵ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200922946,
+      "content": "Ẳ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200921694,
+      "content": "Ằ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200920476,
+      "content": "Ắ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200919406,
+      "content": "Ă",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200909798,
+      "content": "Ậ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200908772,
+      "content": "Ẫ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200907641,
+      "content": "Ẩ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200906423,
+      "content": "Ầ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200904566,
+      "content": "Â",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200902372,
+      "content": "Ấ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200899094,
+      "content": "Ạ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200898392,
+      "content": "Ã",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200897256,
+      "content": "Ả",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200896098,
+      "content": "À",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200895314,
+      "content": "Á",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200816495,
+      "content": "đ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200679907,
+      "content": "ỵ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200678081,
+      "content": "ỹ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200676194,
+      "content": "ỷ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200674844,
+      "content": "ỳ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200674275,
+      "content": "ý",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200650318,
+      "content": "ự",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200649439,
+      "content": "ữ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200648177,
+      "content": "ử",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200647044,
+      "content": "ừ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200644877,
+      "content": "ứ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200643261,
+      "content": "ư",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200639584,
+      "content": "ụ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200638862,
+      "content": "ũ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200638162,
+      "content": "ủ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200636997,
+      "content": "ù",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200636020,
+      "content": "ú",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200597989,
+      "content": "ợ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200596755,
+      "content": "ỡ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200595249,
+      "content": "ở",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200593975,
+      "content": "ờ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200588046,
+      "content": "ớ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200586397,
+      "content": "ơ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200584215,
+      "content": "ộ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200582867,
+      "content": "ỗ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200582191,
+      "content": "ổ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200580472,
+      "content": "ồ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200578772,
+      "content": "ố",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200576265,
+      "content": "ô",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200574472,
+      "content": "ọ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200572638,
+      "content": "õ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200570348,
+      "content": "ỏ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200568024,
+      "content": "ò",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200566061,
+      "content": "ó",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200545801,
+      "content": "ị",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200544205,
+      "content": "ĩ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200542403,
+      "content": "ỉ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200540052,
+      "content": "ì",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200538187,
+      "content": "í",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200511666,
+      "content": "ệ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200509022,
+      "content": "ễ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200505259,
+      "content": "ể",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200497272,
+      "content": "ề",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200495177,
+      "content": "ế",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200493215,
+      "content": "ê",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200485131,
+      "content": "ẹ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200483760,
+      "content": "ẽ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200479620,
+      "content": "ẻ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200471881,
+      "content": "è",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200468577,
+      "content": "é",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200395187,
+      "content": "ặ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200391424,
+      "content": "ẫ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200383176,
+      "content": "ẳ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200379513,
+      "content": "ằ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200376218,
+      "content": "ắ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200350321,
+      "content": "ậ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200348246,
+      "content": "ẫ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200345650,
+      "content": "ẩ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200340222,
+      "content": "ầ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200338029,
+      "content": "ấ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200300465,
+      "content": "ă",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200297491,
+      "content": "â",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200287335,
+      "content": "ạ",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200286272,
+      "content": "ã",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200285052,
+      "content": "ả",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200282775,
+      "content": "à",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1535200279812,
+      "content": "á",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1533743387278,
+      "content": "~gap~",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1532496436734,
+      "content": "Em ne",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Khoa Nguyễn Trọng",
+      "timestamp_ms": 1532496425447,
+      "content": "Anh oi",
+      "type": "Generic"
+    }
+  ],
+  "title": "Khoa Nguyễn Trọng",
+  "is_still_participant": true,
+  "thread_type": "Regular",
+  "thread_path": "KhoaNguyenTrong_b52b1cdab3"
+}
+
+Process finished with exit code 0
