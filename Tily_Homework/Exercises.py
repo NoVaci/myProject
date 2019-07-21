@@ -14,12 +14,12 @@
 #  appear in the other                                #
 #######################################################
 def check_if_letters_are_duplicated_in_two_strings (s1,s2):
-    letter = []
+    letters = set()
     for i in s1:
          for r in s2:
             if i == r:
-                letter.append(i)
-    return letter
+                letters.add(i)
+    return letters
 
 
 ##############------4 chili-----------#################
