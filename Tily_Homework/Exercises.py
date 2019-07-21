@@ -3,16 +3,24 @@
 #  all the number can be produced to 10               #
 #######################################################
 
-def sum_of_product_10(intList):
-    tong = 0
-    for i in intList:
-        if (10 % i ==0):
-            tong=i+tong
-    return tong
+# def sum_of_product_10(intList):
+#     tong = 0
+#     for i in intList:
+#         if (10 % i ==0):
+#             tong=i+tong
+#     return tong
 ##############------3 chili-----------#################
 #  Given 2 strings, determines if letters from one    #
 #  appear in the other                                #
 #######################################################
+def check_if_letters_are_duplicated_in_two_strings (s1,s2):
+    letter = []
+    for i in s1:
+         for r in s2:
+            if i == r:
+                letter.append(i)
+    return letter
+
 
 ##############------4 chili-----------#################
 #  Given a list of numbers and determines if all the  #
@@ -26,7 +34,9 @@ def sum_of_product_10(intList):
 
 
 #-------------------------------------------------------
-intList = [2,3,4,5,1,7,8,10]
+s1 = 'tilytrant'
+s2 = 'tilyt'
 ## Comment out - ctrl + / - lam dong code bi xam di, khong execute
-print(sum_of_product_10(intList))
+# print(sum_of_product_10(intList))
 # tily de thuong
+print (check_if_letters_are_duplicated_in_two_strings(s1,s2))
