@@ -14,7 +14,7 @@
 #  appear in the other                                #
 #######################################################
 def check_if_letters_are_duplicated_in_two_strings (s1,s2):
-    letters = set()
+    letters = set()  # cấu trúc dữ liệu chỉ cho phép tồn taij phần tử không trùng nhau
     for i in s1:
          for r in s2:
             if i == r:
