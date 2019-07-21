@@ -2,11 +2,13 @@
 #  Given a list of numbers and calculate the sum ofe  #
 #  all the number can be produced to 10               #
 #######################################################
+
 def sum_of_product_10(intList):
-    sum = 0
+    tong = 0
     for i in intList:
-        sum += i
-    return sum
+        if (10 % i ==0):
+            tong=i+tong
+    return tong
 ##############------3 chili-----------#################
 #  Given 2 strings, determines if letters from one    #
 #  appear in the other                                #
@@ -25,4 +27,6 @@ def sum_of_product_10(intList):
 
 #-------------------------------------------------------
 intList = [2,3,4,5,1,7,8,10]
+## Comment out - ctrl + / - lam dong code bi xam di, khong execute
 print(sum_of_product_10(intList))
+# tily de thuong
