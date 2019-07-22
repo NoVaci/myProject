@@ -22,6 +22,28 @@ def check_if_letters_are_duplicated_in_two_strings (s1,s2):
     return letters
 
 
+##############------3 chili-----------#################
+#  Given a list of numbers and calculate the sum of   #
+#  numbers placed in odd positioned, e.g: 1th, 3th, ..#
+#######################################################
+
+##############------3 chili-----------#################
+#  Given a list of numbers and find the biggest number#
+#  of numbers placed in even positioned,              #
+# e.g: 2th, 4th, ..                                   #
+#######################################################
+
+##############------3 chili-----------#################
+#  Given a string, create a new string composed of    #
+#  letters in odd positioned, 1th, 3th, 5th..         #
+#######################################################
+
+##############------4 chili-----------#################
+#  Given a string, form a new string with the first   #
+#  half contains letters from odd positioned, the     #
+#  second half contains letters from even positioned  #
+#######################################################
+
 ##############------4 chili-----------#################
 #  Given a list of numbers and determines if all the  #
 #  numbers are different from each other              #
