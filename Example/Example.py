@@ -283,10 +283,10 @@
 # CREATE VIEW COMPANY_VIEW AS
 # SELECT ID, NAME, AGE
 # FROM  COMPANY;
-import sqlite3
-
-# conn = sqlite3.connect('test.db')
-conn = sqlite3.connect('H:/Doujin-Manga/test.db')
+# import sqlite3
+#
+# # conn = sqlite3.connect('test.db')
+# conn = sqlite3.connect('H:/Doujin-Manga/test.db')
 # conn.execute('''CREATE TABLE COMPANY
 #          (ID       INT PRIMARY KEY        NOT NULL,
 #          NAME      TEXT                   NOT NULL,
@@ -310,15 +310,51 @@ conn = sqlite3.connect('H:/Doujin-Manga/test.db')
 # data = cursor.fetchall()
 
 # conn.commit()
-name = "Boshi Soukan ~Haha no Onegai~ _ Incest -Mother&#39;s Request"
-cursor = conn.execute('select * from hentai where title="%s"' % name)
-data = cursor.fetchall()
-for row in cursor:
-   print("title = ", row[0])
-   print("lang = ", row[1])
-   print('size = ', row[2])
-   print('page = ', row[3])
-   print('time = ', row[4])
-   print('cmt = ', row[5])
+# name = "Boshi Soukan ~Haha no Onegai~ _ Incest -Mother&#39;s Request"
+# cursor = conn.execute('select * from hentai where title="%s"' % name)
+# data = cursor.fetchall()
+# for row in cursor:
+#    print("title = ", row[0])
+#    print("lang = ", row[1])
+#    print('size = ', row[2])
+#    print('page = ', row[3])
+#    print('time = ', row[4])
+#    print('cmt = ', row[5])
+#
+# conn.close()
+import pandas as pd
+import random
+import xlsxwriter
+study_no = {'Study No': ['951'] * 3}
+site_no = {'Site No': ['121']}
+finding_type = {'Finding Type': []}
+finding_sub_type = {'Finding Sub Type': []}
+severity = {'Severity': []}
+description = {'Description': []}
 
-conn.close()
+site_list = []
+f_type_list = []
+fs_type = []
+seve = []
+des = []
+
+FINDING_SUB_TYPE = ['Finding Thuyen', 'Finding Thum']
+FINDING_TYPE = ['']
+for i in range(3):
+    site_rand = random.randint(100,999)
+    site_list.append(site_rand)
+
+    f_type_rand = random.choice(FINDING_SUB_TYPE)
+    f_type_list.append(f_type_rand)
+
+    fs_type.append(f_type_rand)
+
+    seve.append('High (3)')
+    des = 'Finding number: ' + str(random.randint(0,3))
+
+data = pd.DataFrame({'Study No': ['951'] * 3, 'Site No': site_list,
+                     'Finding Type': f_type_list, 'Finding Sub Type': fs_type,
+                     'Severity': seve, 'Description': des})
+writer = pd.ExcelWriter('finding_data.xlsx', engine='xlsxwriter')
+data.to_excel(writer, sheet_name='Record', index = False)
+writer.save()
