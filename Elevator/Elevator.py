@@ -1,6 +1,6 @@
 import random
-import time
 import threading
+import time
 
 AVAILABLE = 0
 OCCUPIED = 1
@@ -13,7 +13,7 @@ GROUND_FLOOR = 0
 
 MAX_LOAD = 20
 
-class Elevator():
+class Elevator(object):
     def __init__(self, name):
         self._current_floor = GROUND_FLOOR
         self._status = AVAILABLE
@@ -23,6 +23,9 @@ class Elevator():
 
     def get_elevator_name(self):
         return self.__name
+
+    def get_load(self):
+        return self._load
 
     def set_status(self, status):
         self._status = status
@@ -123,7 +126,7 @@ class Elevator_Operator(object):
         for thread in self.thread_list:
             thread.join()
 
-user_calls = {1: [5,5], 2: [8, 2], 3: [3,3]}
-# user_calls = {1: [5,5]}
-riverside = Elevator_Operator(2)
-riverside.call_elevator(user_calls)
+# user_calls = {1: [5,5], 2: [8, 2], 3: [3,3]}
+# # user_calls = {1: [5,5]}
+# riverside = Elevator_Operator(2)
+# riverside.call_elevator(user_calls)

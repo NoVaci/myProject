@@ -1,4 +1,4 @@
-import os, re, sys
+import os, re, sys, time
 
 class Refactor(object):
     def __init__(self, path, file_path=None):
@@ -50,7 +50,8 @@ class Refactor(object):
         self.result = []
 
     def read_file(self, read_all=False):
-        with open(self.file_path) as  fileread:
+        # with open(self.file_path, encoding='cp1252') as fileread:
+        with open(self.file_path) as fileread:
             if not read_all:
                 self.content = fileread.readlines()
             else:
@@ -69,6 +70,7 @@ class Refactor(object):
     def write_to_orginal_file(self):
         if isinstance(self.new_content, list):
             self.new_content = self._combine_data_in_lines(self.new_content)
+        # with open(os.path.join(self.file_path), "w", encoding='cp1252') as  filewrite:
         with open(os.path.join(self.file_path), "w") as  filewrite:
             filewrite.write(self.new_content)
 
@@ -129,6 +131,32 @@ class Refactor(object):
         self.read_file()
         self.parse_file()
 
+    def rename_screenshot_png(self, dir_name):
+        # Nhung
+        # original_pattern = re.compile(r"(FUL_)(\d{2})(_SS\d{2}).+(.png)")
+        original_pattern = re.compile(r"(DTR_)(\d{2})(_SS\d{2})(.png)")
+        for root, dirs, files in os.walk(os.path.join(self.dir_path, dir_name)):
+            for file in files:
+                time.sleep(0.2)
+                print(file)
+                self.file_path = os.path.join(root, file)
+                # new_name = re.sub(r"(_)(CL_\d\.\d\.\d{1,2})(_SS_\d{2})", r"\1Confirmation_Letter\3_\2", file)
+                new_name = re.sub(original_pattern, r"SP0030_\1PSV_\2\3\4", file)
+                print("Changed to: " + new_name)
+                new_file_path = os.path.join(root, new_name)
+                os.rename(self.file_path, new_file_path)
+
+    def replace_url_link(self, dir_name):
+        for root, dirs, files in os.walk(os.path.join(self.dir_path, dir_name)):
+            # for dir in dirs:
+            for file in files:
+                time.sleep(0.2)
+                print(file)
+                self.file_path = os.path.join(root, file)
+                self.read_file(True)
+                self.new_content = re.sub(r"(URL Address).*",r"\1 of ICOTrial Application", self.content)
+                self.write_to_orginal_file()
+
     def execute_rename_img(self, dir_name, lines):
         for root, dirs, files in os.walk(os.path.join(self.dir_path, dir_name)):
             # for dir in dirs:
@@ -144,5 +172,7 @@ t = Refactor(sys.argv[1])
 # t = Refactor("D:\svn_master\\uat_services_master\src\\robot\TestPlan\TestSuites\\")
 # t = Refactor("D:\\")
 # t.space_refactor_directory('Locators')
-# t.execute_rename_img(sys.argv[2])
-t.execute_rename_img(sys.argv[2], True)
+# replace SS_img or SS_00 to SS_00,01,02 (ordering)
+# t.execute_rename_img(sys.argv[2], True)
+# t.replace_url_link(sys.argv[2])
+t.rename_screenshot_png(sys.argv[2])

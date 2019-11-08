@@ -322,39 +322,95 @@
 #    print('cmt = ', row[5])
 #
 # conn.close()
-import pandas as pd
-import random
-import xlsxwriter
-study_no = {'Study No': ['951'] * 3}
-site_no = {'Site No': ['121']}
-finding_type = {'Finding Type': []}
-finding_sub_type = {'Finding Sub Type': []}
-severity = {'Severity': []}
-description = {'Description': []}
 
-site_list = []
-f_type_list = []
-fs_type = []
-seve = []
-des = []
 
-FINDING_SUB_TYPE = ['Finding Thuyen', 'Finding Thum']
-FINDING_TYPE = ['']
-for i in range(3):
-    site_rand = random.randint(100,999)
-    site_list.append(site_rand)
+# import pandas as pd
+# import random
+# import xlsxwriter
+# no_of_records = 100
+# site_no = {'Site No': ['00009']}
+#
+# site_list = []
+# f_type_list = []
+# fs_type = []
+# seve = []
+# des = []
+#
+# FINDINGS = {'Data Quality': ['Finding Thuyen', 'Finding Thum'],
+#             'Recruitment': ['Finding 10k', 'Finding Vang']}
+# SEVERITY = ['High (3)', 'Medium (2)', 'Low (1)']
+# for i in range(no_of_records):
+#     site_rand = random.choice(site_no['Site No'])
+#     site_list.append(site_rand)
+#
+#     f_type_rand = random.choice(list(FINDINGS.keys()))
+#     f_type_list.append(f_type_rand)
+#
+#     fs_type.append(random.choice(FINDINGS[f_type_rand]))
+#
+#     seve.append(random.choice(SEVERITY))
+#     des.append('Finding number: ' + str(i))
+#
+# data = pd.DataFrame({'Study No': ['000/000009'] * no_of_records, 'Site No': site_list,
+#                      'Finding Type': f_type_list, 'Finding Sub Type': fs_type,
+#                      'Severity': seve, 'Description': des})
+# writer = pd.ExcelWriter('finding_data.xlsx', engine='xlsxwriter')
+# data.to_excel(writer, sheet_name='Record', index = False)
+# writer.save()
 
-    f_type_rand = random.choice(FINDING_SUB_TYPE)
-    f_type_list.append(f_type_rand)
+class Car(object):
+    def __init__(self, hp):
+        self.wheels = 4
+        self.__test = 'Abstract'
+        self.hp = hp
+    def run(self):
+        print('The car can run')
 
-    fs_type.append(f_type_rand)
+    class Tire(object):
+        def __init__(self):
+            self.lap = 100
 
-    seve.append('High (3)')
-    des = 'Finding number: ' + str(random.randint(0,3))
+        def replace_tire(self):
+            print('Replace tire after {0}'.format(self.lap))
 
-data = pd.DataFrame({'Study No': ['951'] * 3, 'Site No': site_list,
-                     'Finding Type': f_type_list, 'Finding Sub Type': fs_type,
-                     'Severity': seve, 'Description': des})
-writer = pd.ExcelWriter('finding_data.xlsx', engine='xlsxwriter')
-data.to_excel(writer, sheet_name='Record', index = False)
-writer.save()
+class Vehicle(object):
+    def __init__(self, engine):
+        self.engine = engine
+
+    def description(self):
+        print('The vehicle has {0} engine'.format(self.engine))
+
+# class BMW(Car, Vehicle):
+class BMW(Car):
+    def __init__(self, hp):
+        Car.__init__(self, hp)
+        # Vehicle.__init__(self, 'V8')
+        self.logo = 'BMW'
+
+    def run(self):
+        print('The {0} can run'.format(self.logo))
+
+# bmw = BMW(1000)
+# bmw.run()
+# bmw.description()
+# tire = bmw.Tire()
+# tire.replace_tire()
+
+# def string_compare(s1, s2):
+#     print('Length s1: ', len(s1))
+#     print('Length s2: ', len(s2))
+#     max = len(s1) if len(s1) > len(s2) else len(s2)
+#
+#     for i in range(max):
+#         if s1[i] != s2[i]:
+#             print('Not match: ', s1[i])
+#             print(type(s1[i]))
+#             print(type(s2[i]))
+#
+# s1 = 'hidden-row'
+# s2 = 'hidden-row'
+# string_compare(s1,s2)
+s = 'False'
+if s == True:
+    print('K')
+
